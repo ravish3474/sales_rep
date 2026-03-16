@@ -8,6 +8,10 @@ Thumbs.db
 # Sensitive config (copy database.php.example and fill in locally)
 protected/config/database.php
 
+# Firebase / GCP service account credentials
+protected/controllers/*.json
+*.json
+
 # Runtime / logs
 protected/runtime/*
 !protected/runtime/.gitkeep

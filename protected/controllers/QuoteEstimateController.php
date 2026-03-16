@@ -6465,9 +6465,11 @@ GRAPHQL;
 
 	public function actionShowQuoteView(){
 
-		$qdoc_id = $_POST["qdoc_id"];
+		$user_group = Yii::app()->user->getState('userGroup');
 
-        $jog_code_main = $_POST['jog_code_main'];
+		$qdoc_id = isset($_POST["qdoc_id"]) ? $_POST["qdoc_id"] : '';
+
+        $jog_code_main = isset($_POST['jog_code_main']) ? $_POST['jog_code_main'] : '';
 
 		$sql_quote = "SELECT * FROM tbl_quote_doc WHERE qdoc_id='".$qdoc_id."'; ";
 
@@ -6479,7 +6481,7 @@ GRAPHQL;
 
 		$admin_private_notes = $row_quote["admin_private_notes"];
 
-		$action_from = $_POST["action_from"];
+		$action_from = isset($_POST["action_from"]) ? $_POST["action_from"] : '';
 
 
 

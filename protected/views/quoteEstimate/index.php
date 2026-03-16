@@ -1071,6 +1071,7 @@
 $user_group = Yii::app()->user->getState('userGroup');
 $user_id = Yii::app()->user->getState('userKey');
 $full_name = Yii::app()->user->getState('fullName');
+$chat_type = ($user_group == "99" || $user_group == "1") ? "A" : "E";
 ?>
 <div id="ajax-loader" style="display: none;">
     <div id="loader-content">
