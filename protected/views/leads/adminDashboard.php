@@ -1,0 +1,1068 @@
+<?
+$month = date('m');
+
+$select_ele = '  <select class="form-select  month_count_filter" aria-label="Default select example"> 
+                           <option value=""> --SELECT MONTH --</option>
+                  ';
+foreach (MONTH_FILTER as $key => $value) {
+    if ($key == $month):
+        $select_ele .=  '<option value="' . $key . '" selected>  
+            ' . $value . '</option>';
+    else:
+        $select_ele .=  '<option value="' . $key . '"> 
+            ' . $value . '</option>';
+    endif;
+}
+
+$select_ele .= ' </select>';
+
+$week_filter = [
+    '0' => 'This week',
+    '1' => 'First week',
+    '2' => 'Second week',
+    '3' => 'Third week'
+];
+$status_class = [
+    '0' => 'greenOption',
+    '1' => 'blueOption ',
+    '3' => 'yellowOption ',
+    '4' => 'purpleOption',
+
+]
+
+?>
+<style>
+    .readNotification {
+        background-color: #fff !important;
+    }
+
+    .unreadNotification {
+        background-color: #F9F9F9 !important;
+        width: 100%;
+    }
+
+    #chartdiv {
+        background-color: #F9F9F9;
+        min-height: 45vh;
+        height: 100%;
+    }
+
+    .actionBtns button {
+        height: fit-content;
+        width: fit-content;
+        padding: 3px;
+    }
+
+    .actionBtns .recover_leads {
+        background-color: #5CB85C !important;
+    }
+
+    #chartdiv canvas {
+        height: 350px;
+        object-fit: cover;
+    }
+
+    .recentLeads .pagination-container {
+        padding: 10px;
+        justify-content: left;
+        position: sticky;
+        min-height: 55px;
+        bottom: 0;
+        border-top: 1px solid #d7d2d2;
+        background: #FFF;
+    }
+
+    .pagination-container {
+        margin: 0;
+        padding: 0;
+
+    }
+
+    .deleted_leads .pagination-container {
+        padding: 10px;
+
+    }
+
+    .notification .allNotification {
+        border: none;
+    }
+
+    .totalAssign {
+        width: 50px !important;
+    }
+
+    .dashboardPage .middle .recentLeads {
+        grid-row: span 2;
+    }
+
+    .dashboardPage .dashboardHistory .chartAngle {
+        width: 100px;
+    }
+
+    .assigned_to_btn {
+        width: 100%;
+        margin: 0;
+        padding: 3px 10px;
+    }
+
+    .countryStatistic {
+        background: rgb(255, 255, 255);
+        border: 1px solid #EEE;
+        border-radius: 4px;
+        width: 100%;
+    }
+
+    .countryStatistic .grid2 {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0;
+    }
+
+    .countryStatistic table {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .countryStatistic table td {
+        padding: 4px 10px;
+    }
+
+    .output_div table td,
+    #Unassigned_leads table td {
+        padding: 10px 5px !important;
+    }
+
+    .output_div {
+        position: relative;
+    }
+
+    .countryStatistic th {
+        height: 35px;
+        text-align: left;
+        padding: 8px;
+    }
+
+    .countryStatistic .countryColor {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        margin-right: 5px;
+        display: inline-block;
+    }
+
+    .countryStatistic span {
+        font-family: "Helvetica Neue", Roboto, Arial, "Droid Sans", sans-serif;
+    }
+
+    .countryStatistic .color1,
+    .color2,
+    .color8 {
+        background: #8067DC;
+    }
+
+    /* .countryStatistic .color2 {
+        background: #EF7AE3;
+    } */
+
+    .countryStatistic .color3 {
+        background: #6771DC;
+    }
+
+    .countryStatistic .color4 {
+        background: #A367DC;
+    }
+
+    .countryStatistic .color5 {
+        background: #C767DC;
+    }
+
+    .countryStatistic .color6 {
+        background: #67B7DC;
+    }
+
+    .countryStatistic .color7 {
+        background: #DC67AB;
+    }
+
+    .countryStatistic .countryStatistic thead {
+        background: #F9F9F9;
+        padding: 12px !important;
+    }
+
+    .notification {
+        border: 1px solid #CFDCE8;
+        height: 50%;
+        border-radius: 10px 10px 2px 2px;
+        width: 100%;
+    }
+
+    .notification .tableHeader {
+        border: none;
+        border-bottom: 1px solid #E3EBF2;
+    }
+
+    .dashboardPage #recentLeadsTabContent {
+        min-height: 35vh;
+        max-height: 35vh;
+        border: none;
+        border: 1px solid #E3EBF2;
+    }
+
+    .notification .collapse.in {
+        display: flex;
+    }
+
+    .overflowX {
+        overflow-x: auto;
+    }
+
+    @media screen and (max-width:1300px) {
+        .dashboardHistory .items select {
+            max-width: 130px;
+        }
+
+    }
+</style>
+
+<div class="">
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12  ">
+            <div class="x_panel">
+                <div class="dashboardPage salesDash">
+                    <div class="upper">
+                        <div class="pageHeader">
+                            <h5 class="xlSize black  ">Welcome to your dashboard !</h5>
+                        </div>
+
+
+                        <div class="dashboardHistory">
+                            <div class=" grid grid4">
+                                <div class="items cBorder">
+                                    <div class="innerBox d-flex between select_parent" data-status="toal_leads">
+                                        <figure><img src="../images/icons/total.png" alt="" class="iconImg1"></figure>
+                                        <? echo $select_ele  ?>
+
+
+
+                                    </div>
+                                    <h4 class="number  toal_leads">
+                                        <? echo isset($count_arr['total_leads']) ? $count_arr['total_leads']  : 0; ?>
+                                    </h4>
+                                    <div class="d-flex between">
+                                        <h6 class="sSize grey fw4 m-0"> Total Leads </h6>
+                                        <?
+                                        $all_leads_percent = isset($count_arr['total_leads_percent']) ? $count_arr['total_leads_percent']  : 0;
+                                        if ($all_leads_percent > 0):
+                                        ?>
+                                            <div class="toal_leads_div">
+                                                <h6 class="chartAngle chartAngleUP ">
+                                                    +<? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Growth Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        else :
+                                        ?>
+                                            <div class="toal_leads_div">
+                                                <h6 class="chartAngle chartAngleDown ">
+                                                    <? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Loss Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        endif;
+                                        ?>
+
+
+                                    </div>
+                                </div>
+                                <div class="items cBorder     ">
+                                    <div class="innerBox d-flex between  select_parent" data-status="new_leads">
+                                        <figure><img src="../images/icons/new.png" alt="" class="iconImg1"></figure>
+                                        <? echo $select_ele  ?>
+
+                                    </div>
+
+                                    <h4 class="number new_leads">
+                                        <? echo isset($count_arr['new_leads']) ? $count_arr['new_leads']  : 0; ?>
+                                    </h4>
+
+
+                                    <div class="d-flex between">
+                                        <h6 class="sSize grey fw4 m-0"> New Leads</h6>
+
+                                        <?
+                                        $all_leads_percent = isset($count_arr['new_leads_percent']) ? $count_arr['new_leads_percent']  : 0;
+                                        if ($all_leads_percent > 0):
+                                        ?>
+                                            <div class="new_leads_div">
+                                                <h6 class="chartAngle chartAngleUP ">
+                                                    +<? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Growth Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        else :
+                                        ?>
+                                            <div class="new_leads_div">
+                                                <h6 class="chartAngle chartAngleDown ">
+                                                    <? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Loss Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        endif;
+                                        ?>
+
+
+                                    </div>
+                                </div>
+                                <div class="items cBorder     ">
+                                    <div class="innerBox d-flex between select_parent" data-status="converted_leads">
+                                        <figure><img src="../images/icons/assign.png" alt="" class="iconImg1"></figure>
+                                        <? echo $select_ele  ?>
+
+                                    </div>
+                                    <h4 class="number converted_leads">
+
+                                        <? echo isset($count_arr['converted_leads']) ? $count_arr['converted_leads']  : 0; ?>
+
+                                    </h4>
+                                    <div class="d-flex between">
+                                        <h6 class="sSize grey fw4 m-0"> Leads Won </h6>
+
+                                        <?
+                                        $all_leads_percent = isset($count_arr['coverted_leads_percent']) ? $count_arr['coverted_leads_percent']  : 0;
+                                        if ($all_leads_percent > 0):
+                                        ?>
+                                            <div class="converted_leads_div">
+                                                <h6 class="chartAngle chartAngleUP ">
+                                                    +<? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Growth Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        else :
+                                        ?>
+                                            <div class="converted_leads_div">
+                                                <h6 class="chartAngle chartAngleDown ">
+                                                    <? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Loss Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        endif;
+                                        ?>
+
+
+
+                                    </div>
+                                </div>
+                                <div class="items cBorder  ">
+                                    <div class="innerBox d-flex between select_parent" data-status="lost_leads">
+                                        <figure><img src="../images/icons/loss.png" alt="" class="iconImg1"></figure>
+                                        <? echo $select_ele  ?>
+
+                                    </div>
+                                    <h4 class="number lost_leads">
+                                        <? echo isset($count_arr['lost_leads']) ? $count_arr['lost_leads']  : 0; ?>
+
+                                    </h4>
+                                    <div class="d-flex between">
+                                        <h6 class="sSize grey fw4 m-0"> Lost Leads</h6>
+
+                                        <?
+                                        $all_leads_percent = isset($count_arr['lost_leads_percent']) ? $count_arr['lost_leads_percent']  : 0;
+                                        if ($all_leads_percent > 0):
+                                        ?>
+                                            <div class="lost_leads_div">
+                                                <h6 class="chartAngle chartAngleUP ">
+                                                    +<? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Growth Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        else :
+                                        ?>
+                                            <div class="lost_leads_div">
+                                                <h6 class="chartAngle chartAngleDown ">
+                                                    <? echo $all_leads_percent  ?>%
+                                                    <img src="../images/icons/Loss Icon.png" alt="" class="iconImg">
+                                                </h6>
+                                            </div>
+                                        <?
+                                        endif;
+                                        ?>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <div class="middle chartArea">
+                        <div class="grid2">
+                            <div id="chartdiv">
+
+                            </div>
+                            <div class="recentLeads overflowX">
+                                <div class="tableHeader d-flex between">
+                                    <h6>Recent Leads</h6>
+                                    <div class="d-flex">
+                                        <button class="d-btn deleteAll_leads my-auto" style="margin-right: 10px;">Delete All </button>
+                                        <select class="form-select select_recent_leads_week" aria-label="Default select example">
+                                            <?
+                                            foreach ($week_filter as $week_key => $week_value) {
+                                            ?>
+                                                <option value="<? echo $week_key ?>"><? echo $week_value ?></option>
+                                            <?
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <ul class="nav nav-tabs" id="recentLeadsTabs" role="tablist">
+
+                                    <li class="nav-item tab_btn active" data-value="online" role="presentation">
+                                        <a class="nav-link active" id="online-tab" data-toggle="tab" href="#online-data" role="tab" aria-controls="online-tab" aria-selected="true">Online</a>
+                                    </li>
+
+                                    <li class="nav-item tab_btn " data-value="offline" role="presentation">
+                                        <a class="nav-link" id="offline-tab" data-toggle="tab" href="#offine-data" role="tab" aria-controls="offine-tab" aria-selected="false">Offline</a>
+                                    </li>
+
+                                </ul>
+
+                                <!-- Tab Content -->
+                                <div class="tab-content mt-3" id="recentLeadsTabContent">
+                                    <div class="tab-pane  active" id="online-data" role="tabpanel" aria-labelledby="online-tab">
+                                        <div class="output_div"></div>
+                                    </div>
+
+                                    <div class="tab-pane fade " id="offine-data" role="tabpanel" aria-labelledby="offline-tab">
+                                        <div class="output_div"></div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <br>
+
+                        <div class="grid2">
+                            <div class="d-flex justify-content-between  " style="flex-direction: column; gap:10px;">
+                                <div class="countryStatistic">
+                                    <div class="table-responsive">
+                                        <div class="grid2">
+                                            <table style="border-right: 1px solid #DDDDDD;padding-right: 10px; ">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Country</th>
+                                                        <th>No. of leads</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?
+                                                    $country_name = TblLeads::getCountryData(true);
+                                                    $arr1 = array_slice($country_name, 0, 4);
+                                                    $arr2 = array_slice($country_name, 4, 7);
+
+
+                                                    foreach ($arr1 as $key => $value) {
+                                                        $count = TblLeads::getCountryCountValue($value['country_name'], $value['is_same']);
+                                                    ?>
+
+
+                                                        <tr>
+                                                            <td>
+                                                                <div class="countryColor color<?= ++$key ?>"></div>
+                                                                <span class="africa"><?= $value['country_name'] ?></span>
+                                                            </td>
+                                                            <td class="text-center"><?= $count ?></td>
+                                                        </tr>
+
+
+                                                    <?
+                                                    }
+                                                    ?>
+
+                                                </tbody>
+
+                                            </table>
+
+
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Country</th>
+                                                        <th>No. of leads</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?
+                                                    foreach ($arr2 as $key => $value) {
+                                                        $count = TblLeads::getCountryCountValue($value['country_name']);
+
+                                                    ?>
+
+
+                                                        <tr>
+                                                            <td>
+                                                                <div class="countryColor color<?= ++$key ?>"></div>
+                                                                <span class="africa"><?= $value['country_name'] ?></span>
+                                                            </td>
+                                                            <td class="text-center"><?= $count ?></td>
+
+                                                        </tr>
+
+
+                                                    <?
+                                                    }
+                                                    ?>
+                                                </tbody>
+
+                                            </table>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="notification mt-3">
+                                    <div class="tableHeader d-flex between">
+                                        <h6>Notifications</h6>
+                                        <div class="d-flex">
+                                            <div class=" panel-collapse collapse " id="collapseOne">
+                                                <div class="d-flex">
+                                                    <button class="d-btn markAsRead">Read Notification</button>
+                                                    <button class="d-btn deleteAll">Delete All</button>
+                                                </div>
+                                            </div>
+                                            <button class="d-btn bg-none border-none " data-toggle="collapse"
+                                                data-target="#collapseOne">
+                                                <figure><img src="../images/icons/bi_three-dots.png" alt="" class="iconImg"></figure>
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+                                    <div class="allNotification">
+                                        <?
+
+
+                                        foreach ($notification as $key => $value) {
+                                            $lead_details = Yii::app()->db->createCommand("SELECT * FROM tbl_leads Where lead_id = '" . $value['lead_id'] . "'")->queryRow();
+
+
+                                        ?> <div class="d-flex ">
+                                                <div class="notificationItems <? echo $value['status'] == 1 ?  'readNotification' : 'unreadNotification' ?> ">
+
+                                                    <label class="leftDay cursor">
+                                                        <input type="checkbox" class="select-item select_notification" value="<?php echo $value['id']; ?>" />
+                                                        <span></span> <!-- Span here if you want some extra styling or space for the checkbox -->
+                                                        <h6><?php echo date('d', strtotime($value['created_at'])); ?></h6>
+                                                        <h5><?php echo date('M', strtotime($value['created_at'])); ?></h5>
+                                                    </label>
+
+
+                                                    <a href="<?php echo Yii::app()->createUrl('leads/viewSalesDetails', array('id' => $value['lead_id'])); ?>" class="rightNote">
+                                                        <p>New Comment on [<? echo $lead_details['name'] ?>]: "<? echo $value['sales_rep'] ?> commented: '<? echo $value['comment'] ?>'"</p>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        <?
+                                        }
+                                        ?>
+
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="Unassigned_leads">
+                                <div class="tableHeader d-flex between">
+                                    <h6>Unassigned Leads </h6>
+                                    <div class="d-flex">
+                                        <button class="d-btn deleteAll_leads my-auto" style="margin-right: 10px;">Delete All </button>
+                                        <select class="form-select  unassigned_week_filter" aria-label="Default select example">
+                                            <?
+                                            foreach ($week_filter as $week_key => $week_val) {
+                                            ?>
+                                                <option value="<? echo $week_key ?>"> <? echo $week_val ?></option>
+                                            <?
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="unassigned_leads overflowX"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="middle">
+
+
+                        <div class="grid2">
+
+
+
+
+
+
+                        </div>
+                    </div>
+
+
+                    <div class="bottom ">
+                        <div class="tableHeader d-flex between">
+                            <h6>Deleted Leads </h6>
+                            <div class="d-flex">
+                                <button class="d-btn delete_leads_permanet my-auto" style="margin-right: 10px;">Delete All</button>
+                                <select class="form-select  delete_leads_week_filter" aria-label="Default select example">
+                                    <?
+                                    foreach ($week_filter as $week_key => $week_val) {
+                                    ?>
+                                        <option value="<? echo $week_key ?>"> <? echo $week_val ?></option>
+                                    <?
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="deleted_leads overflowX">
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Edit lead modal  -->
+    <div class="modal fade smallModal" id="EditLeadModal" role="dialog">
+        <div class="modal-dialog ">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!-- modal header  -->
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title  "> Edit Lead </h4>
+                </div>
+
+                <div class="edit_output_div">
+
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade salesRepModal" id="salesRepModal" tabindex="-1" role="dialog" aria-labelledby="salesRepModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="salesRepModalLabel">Assigned Sales Reps</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="innerBox">
+                    <div class="middle">
+                        <div class="addAdmin">
+                            <div class="selectOption multiselectMain selection_dropdown">
+                                <form action="">
+                                    <button type="button" class="d-btn w-100 bg-none multiDropdownBtn">
+                                        <span class=""> <?php echo $leads['assigned_to'] ?> </span>
+                                        <figure><img src="../../images/icons/blackDropdown.png" alt=""></figure>
+                                    </button>
+                                    <div class="multiselectDropdown" style="display: none;">
+                                        <div class="searchBox">
+                                            <figure class="actionBtns"><img src="../images/icons/searchIconGrey.png" alt=""></figure>
+                                            <input type="text" name="search_name" id="search_name" placeholder="Search"
+                                                data-lead_id="" data-saleperson="">
+                                        </div>
+
+                                        <div class="allMultiList">
+
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="lead_id_assign" id="lead_id_assign" value="">
+                                </form>
+                            </div>
+                        </div>
+                        <div class="totalAssignedAdmin">
+                            <!-- Additional content if needed -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex">
+                <button type="button" class="d-btn  hideSaleRepModal" data-dismiss="modal">Cancel</button>
+                <button type="button" class="d-btn greenBtn savebtn" data-lead_id="">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script src="<?php echo Yii::app()->request->baseUrl; ?>/js/assign_sales_rep.js?var=101" type="text/javascript"></script>
+<script src="<?php echo Yii::app()->request->baseUrl; ?>/js/CrmFunction.js?var=07"></script>
+
+
+<!--  Notification script  -->
+<script>
+    function getNotificationData(selected_val) {
+        $.ajax({
+            url: 'getNotificationAjax',
+            method: 'POST',
+            data: {
+                id: '',
+                selected_val: selected_val
+            },
+            success: function(response) {
+                $('.allNotification').html(response);
+            },
+            error: function(xhr, status, error) {
+
+            }
+        })
+    }
+
+    $('.markAsRead').click(function() {
+        let checked_values = getCheckedValues();
+        getNotificationData(checked_values);
+    });
+
+    $('.deleteAll').click(function() {
+        let selected = getCheckedValues();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Do you want to continue?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, continue!',
+            cancelButtonText: 'No, cancel!',
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                $.ajax({
+                    url: 'deleteNotificationAjax',
+                    method: 'POST',
+                    data: {
+                        selected_val: selected
+                    },
+                    success: function(response) {
+                        $('.allNotification').html(response);
+                    },
+                    error: function(xhr, status, error) {}
+                })
+            }
+        });
+
+
+    });
+</script>
+
+
+
+
+<script>
+    $(document).ready(function() {
+        let tab = $('.tab_btn.active').data('value');
+        getReacentLeads(tab);
+        getUnassignedLeads();
+        getDeletedData();
+    });
+
+
+    function getReacentLeads(tab_value = 0, week = 0, currentPage = 1) {
+        showLoader();
+        $.ajax({
+            url: 'getRecentLeads',
+            method: "POST",
+            data: {
+                tab_value: tab_value,
+                week: week,
+                page: currentPage
+
+            },
+            success: function(response) {
+
+                let activeTab = '';
+
+
+                $('.tab-pane').each(function() {
+                    if ($(this).hasClass('active')) {
+                        activeTab = $(this).attr('id');
+                    }
+                });
+
+                //    console.log($('#'+activeTab+' .output_div')); 
+
+
+                $('#' + activeTab + ' .output_div').html(response);
+
+                hideLoader();
+            },
+            error: function(xhr, status, error) {
+                hideLoader();
+                Swal.fire({
+                    title: 'Can not get any data',
+                    icon: 'warning',
+                    confirmButtonText: 'Got it!'
+                });
+
+            }
+        })
+    }
+
+
+
+
+    function getCheckedValues() {
+
+        let checkedValue = $('.select_notification:checked').map(function() {
+            return $(this).val();
+        }).get();
+        return checkedValue;
+    }
+
+    $('.month_count_filter').change(function() {
+        let parent = $(this).closest('.select_parent');
+        let status = parent.data('status');
+        let month = $(this).val();
+
+
+        $.ajax({
+            url: 'dashboardCountFilter',
+            method: 'POST',
+            data: {
+                status: status,
+                month: month
+            },
+            success: function(response) {
+                let resp = JSON.parse(response);
+                let percent = resp.percent;
+                var ele = '';
+                if (percent > 0) {
+                    ele = `   <h6 class="chartAngle chartAngleUP "> 
+                                                    +${percent} % <img src="../images/icons/Growth Icon.png" alt="" class="iconImg"></figure>
+                            </h6> `;
+                } else {
+                    ele = `   <h6 class="chartAngle chartAngleDown"> 
+                                                    ${percent} % <img src="../images/icons/Loss Icon.png" alt="" class="iconImg"></figure>
+                            </h6> `;
+                }
+
+
+                $('.' + status).html(resp.count);
+                $('.' + status + '_div').html(ele);
+
+            },
+            error: function(xhr, status, error) {
+                Swal.fire('Canceled', 'Somethinng went wrong', 'error');
+            }
+        })
+
+
+    });
+
+
+    function GetAttentionLeads(week = 0) {
+        showLoader();
+        $.ajax({
+            url: 'getAttentionLeads',
+            method: 'POST',
+            data: {
+                id: '',
+                week: week
+            },
+            success: function(response) {
+                $('.needAttentionsArea').html(response);
+                hideLoader();
+            },
+            error: function(xhr, status, error) {
+                hideLoader();
+                swal.fire({
+                    title: 'Something went wrong',
+                    icon: 'warning',
+                    confirmButtonText: 'Got it!'
+                })
+            }
+        });
+    }
+
+    $(document).on('change', '.select_attention_week', function() {
+        let week = $(this).val();
+        GetAttentionLeads(week);
+    });
+
+
+
+    $(document).on('click', '.paginationBtns', function(event) {
+        event.preventDefault();
+        let page = $(this).attr('href');
+        let tab = $('.tab_btn.active').data('value');
+        let week = $('.select_recent_leads_week').val();
+        getReacentLeads(tab, week, page);
+    });
+
+
+    $(document).on('change', '.select_recent_leads_week', function() {
+        let page = $('.paginationBtns.active').attr('href');
+        let tab = $('.tab_btn.active').data('value');
+        let week = $(this).val();
+        getReacentLeads(tab, week, page);
+    });
+
+    $(document).on('click', '.tab_btn', function() {
+        let tab = $(this).data('value');
+        let week = $('.select_recent_leads_week').val();
+        getReacentLeads(tab, week, 1);
+    });
+
+    function getDeletedData(page = 1, week = 0) {
+        showLoader();
+        $.ajax({
+            url: 'getDeletedLeads',
+            method: 'POST',
+            data: {
+                page: page,
+                week: week
+            },
+            success: function(response) {
+                $('.deleted_leads').html(response);
+                hideLoader();
+            },
+            error: function(xhr, status, error) {
+                hideLoader();
+                swal.fire({
+                    title: 'Something went wrong',
+                    icon: 'warning',
+                    confirmButtonText: 'Got it!'
+                })
+            }
+        });
+    }
+
+    $(document).on('change', '.unassigned_week_filter', function() {
+        let week = $(this).val();
+        getUnassignedLeads(week);
+    })
+
+    function getUnassignedLeads(week = 0) {
+        showLoader();
+        $.ajax({
+            url: 'getUnassignedLeads',
+            method: 'POST',
+            data: {
+                week: week
+            },
+            success: function(response) {
+                $('.unassigned_leads').html(response);
+                hideLoader();
+            },
+            error: function(xhr, status, error) {
+                hideLoader();
+                swal.fire({
+                    title: 'Something went wrong',
+                    icon: 'warning',
+                    confirmButtonText: 'Got it!'
+                })
+            }
+        });
+    }
+
+
+
+    $(document).on('change', '.delete_leads_week_filter', function() {
+        let week = $(this).val();
+        getDeletedData(1, week);
+    });
+
+    $(document).on('click', '.hideSaleRepModal , .savebtn', function() {
+        let page = $('.paginationBtns.active').attr('href');
+        let tab = $('.tab_btn.active').data('value');
+        let week = $('.select_recent_leads_week').val();
+        $('#salesRepModal').modal('hide');
+
+        getReacentLeads(tab, week, page);
+        getUnassignedLeads();
+    });
+</script>
+
+<!-- map -->
+<script src="//cdn.amcharts.com/lib/5/index.js"></script>
+<script src="//cdn.amcharts.com/lib/5/map.js"></script>
+<script src="//cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+<script src="//cdn.amcharts.com/lib/5/geodata/data/countries2.js"></script>
+<script src="//cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+
+<?
+$map_data = Yii::app()->db->createCommand("SELECT * FROM tbl_leads Where status!=5 ")->queryAll();
+
+
+$result = [];
+$stateCountryCount = [];
+
+
+foreach ($map_data as $lead) {
+    $state = $lead['state_name'];
+    $country = $lead['country_name'];
+
+    // $country_code = Yii::app()->db->createCommand("SELECT country_code ,is_country  FROM tbl_country WHERE  country_name  LIKE :country  AND state_name =:state")
+    //     ->bindParam(':country', '%' . $country . '%', PDO::PARAM_STR)
+    //     ->bindParam(':state', $state, PDO::PARAM_STR)
+    //     ->queryRow();
+
+    $country_code = Yii::app()->db->createCommand("SELECT country_code ,is_country  FROM tbl_country WHERE  country_name  LIKE  '%$country%' AND state_name LIKE '%$state%' ")
+        ->queryRow();
+
+
+    if (!$country_code) {
+        $country_code = Yii::app()->db->createCommand("SELECT country_code ,is_country  FROM tbl_country WHERE  state_name =:country")
+            ->bindParam(':country', $country, PDO::PARAM_STR)
+            ->queryRow();
+    }
+
+
+
+    $key = $country_code['country_code'];
+    if (isset($stateCountryCount[$key])) {
+
+        $stateCountryCount[$key]['value']++;
+    } else {
+
+        $stateCountryCount[$key] = [
+            'id' => $key,
+            'value' => 1,  // Start with 1 lead
+            'name' => $country
+        ];
+    }
+}
+
+// echo '<pre>'; 
+// print_r($stateCountryCount);
+
+
+$user = Yii::app()->user->getState('userGroup');
+echo '<script> var loggedInUser = ' . $user . '</script>';
+
+echo '<script>  const countryData = ' . json_encode($stateCountryCount) . ' </script>';
+
+?>
+<script src="<?php echo Yii::app()->request->baseUrl; ?>/js/salesMap.js?var=57" type="text/javascript"></script>

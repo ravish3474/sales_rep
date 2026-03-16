@@ -1,0 +1,23 @@
+<?php
+
+// This is the database connection configuration.
+// Copy this file to database.php and fill in your local credentials.
+return array(
+    'db' => array(
+        'class' => 'CDbConnection',
+        'connectionString' => 'mysql:host=localhost;dbname=jog_sales',
+        'emulatePrepare' => true,
+        'username' => 'root',
+        'password' => '',
+        'charset' => 'utf8',
+    ),
+
+    'db2' => array(
+        'class' => 'CDbConnection',
+        'connectionString' => 'mysql:host=localhost;dbname=jog_lockerroom',
+        'emulatePrepare' => true,
+        'username' => 'root',
+        'password' => '',
+        'charset' => 'utf8mb4',
+    ),
+);

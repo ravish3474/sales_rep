@@ -1,0 +1,1718 @@
+<style type="text/css">
+    .cls_sub_panel {
+        margin-top: 0px;
+        margin-bottom: 25px;
+    }
+
+    .cls_sub_panel legend {
+        width: 100px;
+        border: 1px solid #DDD;
+        text-align: left;
+        border-radius: 4px;
+        padding: 5px;
+        margin-bottom: 0px;
+        background: #337AB7;
+        color: #FFF;
+        font-size: 14px;
+        margin: 10px auto;
+    }
+
+    .cls_sub_panel_below {
+        margin-top: 10px;
+    }
+
+    .cls_sub_panel_below legend {
+        width: 130px;
+        border: 1px solid #DDD;
+        text-align: left;
+        border-radius: 10px;
+        padding: 5px;
+        margin-bottom: 0px;
+    }
+
+    .cls_tbl_product {
+        width: 100%;
+    }
+
+    .cls_tbl_product th {
+        background-color: #64b164b8;
+        /* border: 1px solid #AFA; */
+        padding: 5px;
+        font-size: 13px;
+        color: #FFF;
+        font-weight: 100;
+    }
+
+    .cls_tbl_product td {
+        color: #73879C;
+        background-color: #FFF;
+        border: 1px solid #AFA;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .cls_tbl_currency {
+        width: 100%;
+    }
+
+    .cls_tbl_currency th {
+        background-color: #ffffbd;
+        border: 1px solid #EE9;
+        padding: 5px;
+        font-size: 13px;
+        font-weight: 100;
+    }
+
+    .cls_tbl_currency td {
+        color: #73879C;
+        background-color: #FFF;
+        border: 1px solid #EE9;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .cls_tbl_sale_type {
+        width: 100%;
+    }
+
+    .cls_tbl_sale_type th {
+        background-color: #caffff;
+        border: 1px solid #9EE;
+        padding: 5px;
+        font-size: 13px;
+        font-weight: 100;
+    }
+
+    .cls_tbl_sale_type td {
+        color: #73879C;
+        background-color: #FFF;
+        border: 1px solid #9EE;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .cls_tbl_comm_info {
+        width: 100%;
+    }
+
+    .cls_tbl_comm_info th {
+        background-color: #FBF;
+        border: 1px solid #E9E;
+        padding: 5px;
+        font-size: 13px;
+    }
+
+    .cls_tbl_comm_info td {
+        color: #000;
+        background-color: #FFF;
+        border: 1px solid #E9E;
+        padding: 5px;
+        font-size: 11px;
+    }
+
+    i.fa.fa-pencil {
+        cursor: pointer;
+        font-size: 16px;
+        color: #5CB85C !important;
+        border-radius: 50%;
+        background: none;
+        padding: 0px;
+        width: auto;
+        height: auto;
+    }
+
+    .sorting_zone i {
+        cursor: pointer;
+        font-size: 20px;
+        padding: 1px;
+        text-align: center;
+        margin-left: 0px;
+        margin-right: 1px;
+        color: #337AB7;
+    }
+
+    .disable_row td {
+        background-color: #DDD;
+    }
+
+    .select_sale_type {
+        cursor: pointer;
+    }
+
+    tr:hover i.fa.fa-pencil {
+        color: unset !important;
+        background: none !important;
+    }
+
+    .select_sale_type:hover {
+        background-color: #DFF;
+    }
+
+    .select_sale_type_active {
+        background-color: #DFF !important;
+        font-weight: bold;
+        font-size: 13px !important;
+    }
+
+    fieldset {
+        padding: 0;
+    }
+
+    form {
+        padding: 20px;
+    }
+
+    form .form-control {
+        padding: 10px;
+    }
+
+    form .btn {
+        background: #5CB85C;
+        color: #FFF;
+        font-size: 13px;
+        border: none;
+    }
+
+    .cls_tbl_sale_type .btn {
+        border-radius: 3px;
+        background: #EA6153;
+        padding: 4px 10px 3px 10px;
+        color: #FFF;
+        font-size: 12px;
+        border: none;
+    }
+
+    .only-modals form {
+        padding: 10px !important;
+    }
+
+    .only-modals input {
+
+        padding: 7px;
+        background: #337ab71a;
+        border: none;
+        color: #7b7b7b;
+        box-shadow: rgb(100 100 111 / 3%) 0px 7px 29px 0px;
+        margin: 5px 0;
+    }
+
+    .only-modals span {
+        line-height: 30px;
+        font-size: 15px;
+        font-weight: 100;
+    }
+
+    .only-modals textarea {
+        min-height: 150px;
+        background: #337ab71a;
+        border: none;
+        font-size: 13px;
+    }
+
+
+    .checkboxes {
+        margin-top: 7px;
+    }
+
+    .flex-header .close {
+        color: #5C656D;
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        padding: 6px 10px;
+        background: none;
+    }
+
+    .flex-header .close span {
+        line-height: 30px;
+        font-size: 25px;
+        font-weight: 600;
+    }
+
+    .only-modals select {
+        padding: 10px;
+        width: 100%;
+        margin: 10px 0 0 0;
+    }
+
+    @media screen and (max-width:520px) {
+        .only-modals .modal-dialog {
+            width: 100%;
+        }
+
+
+        #new_prod_type {
+            width: 100% !important;
+        }
+
+        #edit_prod_type {
+            width: 100% !important;
+        }
+
+        #new_prod_desc {
+            width: 100% !important;
+        }
+
+        .modal-open .modal {
+            padding-right: 0 !important;
+        }
+
+        .only-modals span {
+            line-height: 26px;
+            font-size: 14px;
+
+        }
+
+
+    }
+</style>
+<div class="row">
+
+    <div class="col-md-12 col-sm-12 col-xs-12">
+        <div class="x_panel">
+            <div class="x_title">
+                <h2>Administrator Panel</h2>
+                <div class="clearfix">
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-sm-12 col-xs-12 ">
+                    <fieldset class="cls_sub_panel">
+                        <legend>
+                            <div style="text-align: center;">Product</div>
+                        </legend>
+                        <div id="product_frame">
+
+                        </div>
+                    </fieldset>
+                    <fieldset class="cls_sub_panel">
+                        <legend style="width: 70%">
+                            <div style="text-align: center;">Manage Price By Product (Extremely Cautious)</div>
+                        </legend>
+                        <form id="update_price_product">
+                            <div class="form-group">
+                                <label for="percent_value">Select Currency</label>
+                                <select class="form-control currency_main" id="" name="curr_id">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="percent_value">Select Product</label>
+                                <select class="form-control product_list_main" id="" name="prod_id">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="percent_value">Select Type</label>
+                                <select class="form-control roles" id="" name="roles">
+                                    <option value="">Select</option>
+                                    <option value="0">ALL</option>
+                                    <option value="1">Sales Direct</option>
+                                    <option value="2">Sales Dealers / Dealers</option>
+                                    <option value="6">Factory Direct</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="percent_value_product">Value</label>
+                                <input type="text" required="" class="form-control percent_value" name="percent_value" id="percent_value_product" placeholder="Enter Value...">
+                            </div>
+                            <div class="form-group">
+                                <label for="increase_decrease_product">Choose Increase/Decrease Overall Value</label>
+                                <select class="form-control" id="increase_decrease_product" name="increase_decrease">
+                                    <option value="1">Increase</option>
+                                    <option value="0">Decrease</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                        </form>
+                        <div id="price_change_product" class="table-responsive">
+
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="col-md-6 col-sm-12 col-xs-12">
+                    <fieldset class="cls_sub_panel">
+                        <legend>
+                            <div style="text-align: center;">Currency</div>
+                        </legend>
+                        <div id="currency_frame">
+
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="col-md-6 col-sm-12 col-xs-12" style="margin-top:10px;">
+                    <fieldset class="cls_sub_panel">
+                        <legend style="width:40%">
+                            <div style="text-align: center;">Currency By Product</div>
+                        </legend>
+                        <div id="currency_product_frame">
+
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="col-md-6 col-sm-12 col-xs-12 ">
+                    <fieldset class="cls_sub_panel">
+                        <legend>
+                            <div style="text-align: center;">Product</div>
+                        </legend>
+                        <div id="product_frame">
+
+                        </div>
+                    </fieldset>
+                    <fieldset class="cls_sub_panel">
+                        <legend style="width: 70%">
+                            <div style="text-align: center;">Manage Price By Extra (Extremely Cautious)</div>
+                        </legend>
+                        <form id="update_price_extra">
+                            <div class="form-group">
+                                <label for="percent_value">Select Currency</label>
+                                <select class="form-control currency_main" id="" name="curr_id">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="percent_value">Select Product</label>
+                                <select class="form-control product_list_main" id="" name="prod_id">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="percent_value_product">Value</label>
+                                <input type="text" required="" class="form-control percent_value" name="percent_value" id="percent_value_product" placeholder="Enter Value...">
+                            </div>
+                            <div class="form-group">
+                                <label for="increase_decrease_product">Choose Increase/Decrease Overall Value</label>
+                                <select class="form-control" id="increase_decrease_product" name="increase_decrease">
+                                    <option value="1">Increase</option>
+                                    <option value="0">Decrease</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                        </form>
+                        <div id="price_change_extra" class="table-responsive">
+
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="col-md-6 col-sm-12 col-xs-12" style="margin-top:10px;">
+                    <fieldset class="cls_sub_panel">
+                        <legend style="width: 60%">
+                            <div style="text-align: center;">Manage Overall Price (Extremely Cautious)</div>
+                        </legend>
+                        <form id="update_overall_price">
+                            <div class="form-group">
+                                <label for="percent_value">Value</label>
+                                <input type="text" required="" class="form-control percent_value" name="percent_value" id="percent_value" placeholder="Enter Value...">
+                            </div>
+                            <div class="form-group">
+                                <label for="increase_decrease">Choose Increase/Decrease Overall Value</label>
+                                <select class="form-control" id="increase_decrease" name="increase_decrease">
+                                    <option value="1">Increase</option>
+                                    <option value="0">Decrease</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                        </form>
+                        <div id="price_change">
+
+                        </div>
+                    </fieldset>
+                    <fieldset class="cls_sub_panel">
+                        <legend style="width: 50%">
+                            <div style="text-align: center;">Quickbooks Excel Export</div>
+                        </legend>
+                        <form method="POST" id="quickbook" action="/priceGuideV2/quickbookExcel">
+                            <div class="form-group">
+                                <label for="percent_value">Select Product</label>
+                                <select name="prod_id" class="form-control product_list_main product_list_main_quickbook">
+                                </select>
+                            </div>
+                            <button type="button" id="btn_quick" class="btn btn-default">Download Excel</button>
+                        </form>
+                    </fieldset>
+                </div>
+            </div>
+
+            <!-- <div class="row"> -->
+            <div class="col-md-4 col-sm-12 col-xs-12" style="margin-top:10px;">
+                <fieldset class="cls_sub_panel_below">
+                    <legend style="width:50%;">
+                        <div style="text-align: center;">Sales Type</div>
+                    </legend>
+                    <div id="sale_type_frame">
+
+                    </div>
+                </fieldset>
+            </div>
+            <div class="col-md-8 col-sm-12 col-xs-12" style="margin-top:10px;">
+                <fieldset class="cls_sub_panel_below">
+                    <legend style="width:80%;">
+                        <div style="text-align: center;">Commission for <span id="sp_sat_name">[Please select Sales Type]</span></div>
+                    </legend>
+                    <div id="commission_frame">
+
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-sm-12 col-xs-12" style="margin-top:10px;">
+            <fieldset class="cls_sub_panel">
+                <legend style="width: 50%">
+                    <div style="text-align: center;">Round Off (Price Guide)</div>
+                </legend>
+                <form id="round_off">
+                    <div class="form-group">
+                        <label for="percent_value">Select Currency</label>
+                        <select class="form-control currency_main" name="curr_id">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="increase_decrease">Select Product</label>
+                        <select class="form-control product_list_main" name="prod_id">
+
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
+                <div id="round_off_change">
+
+                </div>
+            </fieldset>
+        </div>
+
+        <div class="col-md-6 col-sm-12 col-xs-12" style="margin-top:10px;">
+            <fieldset class="cls_sub_panel">
+                <legend style="width: 60%">
+                    <div style="text-align: center;">Quotation Exchange Calculator</div>
+                </legend>
+                <div id="quote_exchange_div">
+                    <table class="cls_tbl_sale_type table">
+                        <tbody>
+                            <tr>
+                                <th>
+                                    #
+                                </th>
+                                <th style="text-align: center;">Base Currency</th>
+                                <th style="text-align: center;">Currency</th>
+                                <th style="text-align: center;">Exchange Rate</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center;">1</td>
+                                <td style="text-align: center;">USD (North America)</td>
+                                <td style="text-align: center;">CAD (NORTH AMERICA)</td>
+                                <td style="text-align: center;"><input type="text"></td>
+                                <td style="text-align: center;"><button class="btn btn-primary">Update</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
+        </div>
+
+    </div>
+</div>
+
+</div>
+
+<!-- Add Product -->
+<div class="modal fade only-modals" id="adminAddProductModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:650px;">
+        <div class="modal-content">
+            <div class="flex-header modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Add New Product</h4>
+            </div>
+            <div class="modal-body">
+                <form id="add_product_form" class="m-over-hidden">
+                    <span>Name</span>:<br>
+                    <input style="width: 100%;" type="text" name="new_prod_name" id="new_prod_name" maxlength="200"><br>
+                    <span>Short Name</span>:<br>
+                    <input style="width: 50%;" type="text" name="new_prod_type" id="new_prod_type" maxlength="20"> <span style="color:#EA6153; font-weight: 100; font-size: 14px;">* Please do not use space and special characters *</span><br>
+                    <span>Detail</span>: <br>
+                    <textarea name="new_prod_detail" id="new_prod_detail" style="width: 100%; height: 60px; min-height: 61px; margin: 3px; resize: none;"></textarea><br>
+                    <span>Note</span>: <br>
+                    <textarea name="new_prod_note" id="new_prod_note" style="width: 100%; height: 60px; min-height: 61px; margin: 3px; resize: none;"></textarea>
+                    <span>Sale Type</span>: <br>
+                    <div class="row checkboxes">
+                        <?php
+                        for ($i = 0; $i < sizeof($a_sat); $i++) {
+                            $row_sat = $a_sat[$i];
+                        ?>
+                            <div class="col-md-4">
+                                <input type="checkbox" name="sat_select[]" value="<?php echo $row_sat["sat_id"]; ?>"> <?php echo $row_sat["sat_name"]; ?>
+                            </div>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminAddProduct();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product -->
+<div class="modal fade only-modals" id="adminEditProductModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:650px;">
+        <div class="modal-content">
+            <div class="flex-header modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Edit Product</h4>
+            </div>
+            <div class="modal-body">
+                <div id="edit_product_loading" style="display: none;"><i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...</div>
+                <form id="edit_product_form" class="m-over-hidden">
+                    <span>Name</span>:<br>
+                    <input style="width: 100%;" type="text" name="edit_prod_name" id="edit_prod_name" maxlength="200"><br>
+                    <span> Short Name:</span><br>
+                    <input style="width: 50%;" type="text" name="edit_prod_type" id="edit_prod_type" maxlength="20"><span style="color:#EA6153; font-weight: 100; font-size: 14px;">* Please do not use space and special characters *</span><br>
+                    <span>Detail:</span> <br>
+                    <textarea name="edit_prod_detail" id="edit_prod_detail" style="width: 100%; height: 60px; min-height: 61px; margin: 3px; resize: none;"></textarea><br>
+                    <span>Note:</span> <br>
+                    <textarea name="edit_prod_note" id="edit_prod_note" style="width: 100%; height: 60px; min-height: 61px; margin: 3px; resize: none;"></textarea>
+                    <input type="hidden" name="edit_prod_id" id="edit_prod_id" value="">
+                    <span>Sale Type:</span> <br>
+                    <div class="row">
+                        <?php
+                        for ($i = 0; $i < sizeof($a_sat); $i++) {
+                            $row_sat = $a_sat[$i];
+                        ?>
+                            <div class="col-md-4">
+                                <input type="checkbox" class="edit_sat_select" name="edit_sat_select[]" value="<?php echo $row_sat["sat_id"]; ?>"> <?php echo $row_sat["sat_name"]; ?>
+                            </div>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                    <br>
+                    Publish: <select id="edit_prod_enable" name="edit_prod_enable">
+                        <option value="1">Enable</option>
+                        <option value="0">Disable</option>
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminEditProduct();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Currency -->
+<div class="modal fade only-modals" id="adminAddCurrencyModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:650px;">
+        <div class="modal-content">
+            <div class="flex-header modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Add New Currency</h4>
+            </div>
+            <div class="modal-body">
+                <form id="add_curr_form">
+                    <span>Name</span>:<br>
+                    <input style="width: 100%;" type="text" name="new_curr_name" id="new_curr_name" maxlength="10"><br>
+                    <span>Description:</span> <br>
+                    <input name="new_curr_desc" id="new_prod_desc" style="width: 100%;" maxlength="100"><br>
+                    <span>Symbol:</span> <br>
+                    <input name="new_curr_symbol" id="new_curr_symbol" style="width: 100%;" maxlength="10">
+                    <span>Exchange rate from USD:</span> <br>
+                    <input type="number" min="0.0" step="0.01" name="new_exchange_from_usd" id="new_exchange_from_usd" style="width: 100%;" maxlength="10">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminAddCurrency();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Currency -->
+<div class="modal fade only-modals" id="adminEditCurrencyModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:500px;">
+        <div class="modal-content">
+            <div class="flex-header modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Edit Currency</h4>
+            </div>
+            <div class="modal-body" style="max-height: 500px;">
+                <div id="edit_curr_loading" style="display: none;"><i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...</div>
+                <form id="edit_curr_form">
+                    <span>Name:</span><br>
+                    <input style="width: 100%;" type="text" name="edit_curr_name" id="edit_curr_name" maxlength="10"><br>
+                    <span>Description:</span> <br>
+                    <input name="edit_curr_desc" id="edit_curr_desc" style="width: 100%;" maxlength="100"><br>
+                    <span> Symbol:</span> <br>
+                    <input name="edit_curr_symbol" id="edit_curr_symbol" style="width: 100%;" maxlength="10">
+                    <span>Exchange rate from USD:</span> <br>
+                    <input type="number" min="0.0" step="0.01" name="edit_exchange_from_usd" id="edit_exchange_from_usd" style="width: 100%;" maxlength="10">
+                    <br><br>
+                    <span>Publish:</span> <select id="edit_curr_enable" name="edit_curr_enable">
+                        <option value="1">Enable</option>
+                        <option value="0">Disable</option>
+                    </select>
+                    <input type="hidden" name="edit_curr_id" id="edit_curr_id" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminEditCurrency();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Sale Type -->
+<div class="modal fade" id="adminAddSaleTypeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:500px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Add New Sales Type</h4>
+            </div>
+            <div class="modal-body" style="max-height: 500px;">
+                <form id="add_sat_form">
+                    Name:<br>
+                    <input style="width: 100%;" type="text" name="new_sat_name" id="new_sat_name" maxlength="100">
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminAddSaleType();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Sale Type -->
+<div class="modal fade" id="adminEditSaleTypeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:500px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Edit Sales Type</h4>
+            </div>
+            <div class="modal-body" style="max-height: 500px;">
+                <div id="edit_sat_loading" style="display: none;"><i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...</div>
+                <form id="edit_sat_form">
+                    Name:<br>
+                    <input style="width: 100%;" type="text" name="edit_sat_name" id="edit_sat_name" maxlength="100">
+                    <br><br>
+                    Publish: <select id="edit_sat_enable" name="edit_sat_enable">
+                        <option value="1">Enable</option>
+                        <option value="0">Disable</option>
+                    </select>
+                    <input type="hidden" name="edit_sat_id" id="edit_sat_id" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminEditSaleType();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Commission -->
+<div class="modal fade" id="adminAddCommissionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:500px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Add New Commission Info</h4>
+            </div>
+            <div class="modal-body" style="max-height: 500px;">
+                <form id="add_comm_form">
+                    Title:<br>
+                    <input style="width: 100%;" type="text" name="new_qty_name" id="new_qty_name" maxlength="50"><br>
+                    Comm.%:<br>
+                    <input style="width: 100%;" type="number" name="new_comm_value" id="new_comm_value" maxlength="3" min="0" max="100">
+                    <input type="hidden" name="new_comm_sat_id" id="new_comm_sat_id" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminAddCommission();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Commission -->
+<div class="modal fade" id="adminEditCommissionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:500px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 style="float: left;" class="modal-title">Edit Commission Info</h4>
+            </div>
+            <div class="modal-body" style="max-height: 500px;">
+                <div id="edit_comm_loading" style="display: none;"><i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...</div>
+                <form id="edit_comm_form">
+                    Title:<br>
+                    <input style="width: 100%;" type="text" name="edit_qty_name" id="edit_qty_name" maxlength="50"><br>
+                    Comm.%:<br>
+                    <input style="width: 100%;" type="number" name="edit_comm_value" id="edit_comm_value" maxlength="3" min="0" max="100">
+                    <br><br>
+                    Publish: <select id="edit_comm_enable" name="edit_comm_enable">
+                        <option value="1">Enable</option>
+                        <option value="0">Disable</option>
+                    </select>
+                    <input type="hidden" name="edit_comm_per_id" id="edit_comm_per_id" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button style="float:right;" type="button" class="btn btn-success" onclick="return submitAdminEditCommission();">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    adminShowProduct();
+    adminShowCurrency();
+    adminShowCurrencyProduct();
+    adminShowSaleType();
+    fetchIncreaseDecreasePercentage();
+    fetchIncreaseDecreasePercentageProduct();
+    fetchIncreaseDecreaseExtra();
+    adminShowProductPriceChange();
+    fetchCurrency();
+    fetchRoundOff();
+    fetchQuoteCurrency();
+
+    function fetchQuoteCurrency() {
+        $('#quote_exchange_div').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowQuoteCurrency",
+            success: function(resp) {
+
+                $('#quote_exchange_div').html(resp);
+            }
+        });
+    }
+
+    function adminShowProduct() {
+        $('#product_frame').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowProduct",
+            success: function(resp) {
+
+                $('#product_frame').html(resp);
+            }
+        });
+    }
+
+    function adminShowProductPriceChange() {
+        $('.product_list_main').empty();
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowProductAll",
+            success: function(resp) {
+                var response = JSON.parse(resp);
+                var html = '';
+                for (var i = 0; i < response.a_product.length; i++) {
+                    html += '<option value="' + response.a_product[i].prod_id + '">' + response.a_product[i].prod_name + '</option>';
+                }
+                $('.product_list_main').append(html);
+            }
+        });
+    }
+
+    function fetchCurrency() {
+        $('.currency_main').empty();
+console.log("fetchCurrency called");
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/FetchCurrency",
+            success: function(resp) {
+                var response = JSON.parse(resp);
+                var html = '';
+                for (var i = 0; i < response.row_currency.length; i++) {
+                    html += '<option value="' + response.row_currency[i].curr_id + '">' + response.row_currency[i].curr_name + ' (' + response.row_currency[i].curr_desc + ')</option>';
+                }
+                $('.currency_main').append(html);
+            }
+        });
+    }
+
+    function adminSwapProduct(own_id, swap_id) {
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminSwapProduct",
+            data: {
+                "own_id": own_id,
+                "swap_id": swap_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    adminShowProduct();
+
+                }
+            }
+        });
+
+    }
+
+    function submitAdminAddProduct() {
+
+        if ($('#new_prod_name').val() == "") {
+            alert("Please input Name.");
+            return false;
+        }
+
+        if ($('#new_prod_type').val() == "") {
+            alert("Please input Short Name.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminAddProduct",
+            data: $('#add_product_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminAddProductModal').modal("toggle");
+                    adminShowProduct();
+
+                }
+            }
+        });
+
+    }
+
+    function adminEditProduct(prod_id) {
+
+        $('#edit_product_loading').show();
+        $('#edit_product_form').hide();
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/getProductInfo",
+            data: {
+                "prod_id": prod_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#edit_prod_id').val(resp.prod_id);
+                    $('#edit_prod_name').val(resp.prod_name);
+                    $('#edit_prod_type').val(resp.prod_type);
+                    $('#edit_prod_detail').val(resp.prod_detail);
+                    $('#edit_prod_note').val(resp.prod_note);
+                    $('#edit_prod_enable').val(resp.enable);
+
+                    $('.edit_sat_select').each(function() {
+                        $(this).prop("checked", false);
+                    });
+
+                    if (resp.sat_id_list != null && resp.sat_id_list != "") {
+                        var a_sat_id_select = resp.sat_id_list.split(",");
+
+                        $('.edit_sat_select').each(function() {
+                            sat_id = $(this).val();
+
+                            for (i = 0; i < a_sat_id_select.length; i++) {
+                                if (sat_id == a_sat_id_select[i]) {
+                                    $(this).prop("checked", true);
+                                }
+                            }
+                        });
+                    }
+
+                    $('#edit_product_loading').hide();
+                    $('#edit_product_form').show();
+
+                } else {
+                    alert(resp.msg);
+                }
+            }
+        });
+
+    }
+
+    function submitAdminEditProduct() {
+
+        if ($('#edit_prod_name').val() == "") {
+            alert("Please input Name.");
+            return false;
+        }
+
+        if ($('#edit_prod_type').val() == "") {
+            alert("Please input Short Name.");
+            return false;
+        }
+
+        if ($('#edit_prod_id').val() == "") {
+            alert("Error invalid parameter.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminEditProduct",
+            data: $('#edit_product_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminEditProductModal').modal("toggle");
+                    adminShowProduct();
+
+                }
+            }
+        });
+
+    }
+
+    function adminShowCurrency() {
+        $('#currency_frame').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowCurrency",
+            success: function(resp) {
+
+                $('#currency_frame').html(resp);
+                adminShowCurrencyProduct();
+            }
+        });
+    }
+
+    function adminShowCurrencyProduct() {
+        $('#currency_product_frame').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowCurrencyProduct",
+            success: function(resp) {
+
+                $('#currency_product_frame').html(resp);
+            }
+        });
+    }
+
+    function adminSwapCurrency(own_id, swap_id) {
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminSwapCurrency",
+            data: {
+                "own_id": own_id,
+                "swap_id": swap_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    adminShowCurrency();
+
+                }
+            }
+        });
+
+    }
+
+    function submitAdminAddCurrency() {
+
+        if ($('#new_curr_name').val() == "") {
+            alert("Please input Name.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminAddCurrency",
+            data: $('#add_curr_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminAddCurrencyModal').modal("toggle");
+                    adminShowCurrency();
+
+                }
+            }
+        });
+
+    }
+
+    function adminEditCurrency(curr_id) {
+
+        $('#edit_curr_loading').show();
+        $('#edit_curr_form').hide();
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/getCurrencyInfo",
+            data: {
+                "curr_id": curr_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#edit_curr_id').val(resp.curr_id);
+                    $('#edit_curr_name').val(resp.curr_name);
+                    $('#edit_curr_desc').val(resp.curr_desc);
+                    $('#edit_curr_symbol').val(resp.curr_symbol);
+                    $('#edit_exchange_from_usd').val(resp.exchange_from_usd);
+                    $('#edit_curr_enable').val(resp.enable);
+
+                    $('#edit_curr_loading').hide();
+                    $('#edit_curr_form').show();
+
+                } else {
+                    alert(resp.msg);
+                }
+            }
+        });
+
+    }
+
+    function submitAdminEditCurrency() {
+
+        if ($('#edit_curr_name').val() == "") {
+            alert("Please input Name.");
+            return false;
+        }
+
+        if ($('#edit_curr_id').val() == "") {
+            alert("Error invalid parameter.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminEditCurrency",
+            data: $('#edit_curr_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminEditCurrencyModal').modal("toggle");
+                    adminShowCurrency();
+
+                }
+            }
+        });
+
+    }
+
+    $(document).on('click', '.prd_curr', function() {
+        var curr_id = $(this).attr('curr_id');
+        var prd_id = $('#prd_curr_id_' + curr_id).val();
+        var product = $('option:selected', '#prd_curr_id_' + curr_id).attr('product');
+        if (confirm("Please Note!! This action will be replace all of prices in this currency for " + product)) {
+
+            $('#btn_bpfusd_prd').attr("dsiabled", true).html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i> <i class="fa fa-database"></i>');
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/buildPricesFromUSDproduct",
+                data: {
+                    "curr_id": curr_id,
+                    "prd_id": prd_id
+                },
+                success: function(resp) {
+                    if (resp.result == "success") {
+
+                        adminShowCurrency();
+                        adminShowCurrencyProduct();
+
+                    } else {
+                        alert(resp.msg);
+                        $('#btn_bpfusd_prd').attr("dsiabled", false).html('<i class="fa fa-arrow-circle-o-right"></i> <i class="fa fa-database"></i>');
+                    }
+
+                }
+            });
+        }
+    })
+
+    function buildPricesFromUSD(curr_id) {
+        if (confirm("Please Note!! This action will be replace all of prices in this currency.")) {
+
+            $('#btn_bpfusd').attr("dsiabled", true).html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i> <i class="fa fa-database"></i>');
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/buildPricesFromUSD",
+                data: {
+                    "curr_id": curr_id
+                },
+                success: function(resp) {
+
+                    if (resp.result == "success") {
+
+                        adminShowCurrency();
+
+                    } else {
+                        alert(resp.msg);
+                        $('#btn_bpfusd').attr("dsiabled", false).html('<i class="fa fa-arrow-circle-o-right"></i> <i class="fa fa-database"></i>');
+                    }
+
+                }
+            });
+        }
+    }
+
+    function adminShowSaleType() {
+        $('#sale_type_frame').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowSaleType",
+            success: function(resp) {
+
+                $('#sale_type_frame').html(resp);
+            }
+        });
+    }
+
+    function fetchRoundOff() {
+        $('#round_off_change').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/fetchRoundOffChange",
+            success: function(resp) {
+
+                $('#round_off_change').html(resp);
+            }
+        });
+    }
+
+    function fetchIncreaseDecreasePercentage() {
+        $('#price_change').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/fetchIncreaseDecreasePercentage",
+            success: function(resp) {
+
+                $('#price_change').html(resp);
+            }
+        });
+    }
+
+    function fetchIncreaseDecreasePercentageProduct() {
+        $('#price_change_product').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/fetchIncreaseDecreasePercentageProduct",
+            success: function(resp) {
+
+                $('#price_change_product').html(resp);
+            }
+        });
+    }
+
+    function fetchIncreaseDecreaseExtra() {
+        $('#price_change_extra').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/fetchIncreaseDecreaseExtra",
+            success: function(resp) {
+
+                $('#price_change_extra').html(resp);
+            }
+        });
+    }
+
+    function adminSwapSaleType(own_id, swap_id) {
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminSwapSaleType",
+            data: {
+                "own_id": own_id,
+                "swap_id": swap_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    adminShowSaleType();
+
+                }
+            }
+        });
+
+    }
+
+    function submitAdminAddSaleType() {
+
+        if ($('#new_sat_name').val() == "") {
+            alert("Please input Name.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminAddSaleType",
+            data: $('#add_sat_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminAddSaleTypeModal').modal("toggle");
+                    adminShowSaleType();
+
+                }
+            }
+        });
+
+    }
+
+    function adminEditSaleType(sat_id) {
+
+        $('#edit_sat_loading').show();
+        $('#edit_sat_form').hide();
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/getSaleTypeInfo",
+            data: {
+                "sat_id": sat_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#edit_sat_id').val(resp.sat_id);
+                    $('#edit_sat_name').val(resp.sat_name);
+                    $('#edit_sat_enable').val(resp.enable);
+
+                    $('#edit_sat_loading').hide();
+                    $('#edit_sat_form').show();
+
+                } else {
+                    alert(resp.msg);
+                }
+            }
+        });
+
+    }
+
+    function submitAdminEditSaleType() {
+
+        if ($('#edit_sat_name').val() == "") {
+            alert("Please input Name.");
+            return false;
+        }
+
+        if ($('#edit_sat_id').val() == "") {
+            alert("Error invalid parameter.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminEditSaleType",
+            data: $('#edit_sat_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminEditSaleTypeModal').modal("toggle");
+                    adminShowSaleType();
+
+                }
+            }
+        });
+
+    }
+
+    function adminSelectSaleType(sat_id) {
+
+        $('.sat_mark').removeClass("select_sale_type_active").addClass("select_sale_type");
+        $('#sat_name_select' + sat_id).addClass("select_sale_type_active").removeClass("select_sale_type");
+
+        $('#sp_sat_name').html('<u>' + $('#sat_name_select' + sat_id).html() + '</u>');
+
+        $('#commission_frame').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "html",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminPanelShowCommission",
+            data: {
+                "sat_id": sat_id
+            },
+            success: function(resp) {
+
+                $('#commission_frame').html(resp + '<input type="hidden" id="select_sat_id" value="' + sat_id + '">');
+            }
+        });
+
+    }
+
+    function adminEditCommission(comm_per_id) {
+
+        $('#edit_comm_loading').show();
+        $('#edit_comm_form').hide();
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/getCommissionInfo",
+            data: {
+                "comm_per_id": comm_per_id
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#edit_comm_per_id').val(resp.comm_per_id);
+                    $('#edit_qty_name').val(resp.qty_name);
+                    $('#edit_comm_value').val(resp.comm_value);
+                    $('#edit_comm_enable').val(resp.enable);
+
+                    $('#edit_comm_loading').hide();
+                    $('#edit_comm_form').show();
+
+                } else {
+                    alert(resp.msg);
+                }
+            }
+        });
+
+    }
+
+    function submitAdminEditCommission() {
+
+        if ($('#edit_qty_name').val() == "") {
+            alert("Please input Title.");
+            return false;
+        }
+
+        if ($('#edit_comm_value').val() == "") {
+            alert("Please input Commission %.");
+            return false;
+        }
+
+        if ($('#edit_comm_per_id').val() == "") {
+            alert("Error invalid parameter.");
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminEditCommission",
+            data: $('#edit_comm_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminEditCommissionModal').modal("toggle");
+                    adminSelectSaleType($('#select_sat_id').val());
+
+                }
+            }
+        });
+
+    }
+
+    $(document).on('submit', '#update_price_product', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var formData = new FormData(form[0]);
+        if (confirm(('Do You Really Want to change Product Pricing ? All Product prices would get affected.'))) {
+            $('#price_change_product').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/updateOverallProduct',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchIncreaseDecreasePercentageProduct();
+                    }
+                }
+            })
+        }
+    })
+
+    $(document).on('submit', '#update_price_extra', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var formData = new FormData(form[0]);
+        if (confirm(('Do You Really Want to change Product Extra Pricing ? All Product prices would get affected.'))) {
+            $('#update_price_extra').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/updateOverallextra',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchIncreaseDecreaseExtra();
+                    }
+                }
+            })
+        }
+    })
+
+    $(document).on('submit', '#round_off', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var formData = new FormData(form[0]);
+        if (confirm(('Do You Really Want to round off Pricing ? Product prices will be affected.'))) {
+            $('#round_off_change').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/roundOffPrice',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchRoundOff();
+                    } else {
+                        alert('Something Went Wrong');
+                    }
+                }
+            })
+        }
+    })
+
+    $(document).on('submit', '#update_overall_price', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var formData = new FormData(form[0]);
+        if (confirm(('Do You Really Want to change Overall Pricing ? All Product prices would get affected.'))) {
+            $('#price_change').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/updateOverall',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchIncreaseDecreasePercentage();
+                    }
+                }
+            })
+        }
+    })
+
+    function undo_change(percent_value, increase_decrease, change_id) {
+        var change_id = change_id;
+        var percent_value = percent_value;
+        var increase_decrease = increase_decrease;
+        if (confirm('Do You Really Want to do last changes?')) {
+            $('#price_change').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                data: {
+                    percent_value: percent_value,
+                    increase_decrease: increase_decrease,
+                    change_id: change_id
+                },
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/undoOverall',
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchIncreaseDecreasePercentage();
+                    }
+                }
+            })
+        }
+    }
+
+    function undo_change_product(percent_value, increase_decrease, change_id, prod_id, curr_id,sat_id) {
+        var change_id = change_id;
+        var percent_value = percent_value;
+        var increase_decrease = increase_decrease;
+        var prod_id = prod_id;
+        var curr_id = curr_id;
+         var sat_id = sat_id;
+        if (confirm('Do You Really Want to do last changes?')) {
+            $('#price_change_product').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                data: {
+                    percent_value: percent_value,
+                    increase_decrease: increase_decrease,
+                    change_id: change_id,
+                    prod_id: prod_id,
+                    curr_id: curr_id,
+                    sat_id: sat_id
+                },
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/undoOverallProduct',
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchIncreaseDecreasePercentageProduct();
+                    }
+                }
+            })
+        }
+    }
+
+    function undo_change_extra(percent_value, increase_decrease, change_id, prod_id, curr_id) {
+        var change_id = change_id;
+        var percent_value = percent_value;
+        var increase_decrease = increase_decrease;
+        var prod_id = prod_id;
+        var curr_id = curr_id;
+        if (confirm('Do You Really Want to do last changes?')) {
+            $('#price_change_product').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+            $.ajax({
+                type: 'POST',
+                data: {
+                    percent_value: percent_value,
+                    increase_decrease: increase_decrease,
+                    change_id: change_id,
+                    prod_id: prod_id,
+                    curr_id: curr_id
+                },
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/undoOverallExtra',
+                success: function(response) {
+                    var response = JSON.parse(response);
+                    if (response.status == 1) {
+                        fetchIncreaseDecreaseExtra();
+                    }
+                }
+            })
+        }
+    }
+
+    $('.percent_value').on('keypress', function(event) {
+        if ((event.which != 46 || $(this).val().indexOf('.') != -1) && (event.which < 48 || event.which > 57)) {
+            event.preventDefault();
+        }
+        var input = $(this).val();
+        if ((input.indexOf('.') != -1) && (input.substring(input.indexOf('.')).length > 2)) {
+            event.preventDefault();
+        }
+    });
+
+    function adminSwapCommission(comm_per_id, direction) {
+
+        var select_sat_id = $('#select_sat_id').val();
+        $('#commission_frame').html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i>Loading...');
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/adminSwapCommission",
+            data: {
+                "comm_per_id": comm_per_id,
+                "sat_id": select_sat_id,
+                "direction": direction
+            },
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    adminSelectSaleType(select_sat_id);
+
+                } else {
+                    alert(resp.msg);
+                }
+            }
+        });
+
+    }
+
+    function submitAdminAddCommission() {
+
+        if ($('#new_qty_name').val() == "") {
+            alert("Please input Title.");
+            return false;
+        }
+
+        if ($('#new_comm_value').val() == "") {
+            alert("Please input Commission %.");
+            return false;
+        }
+
+        var select_sat_id = $('#select_sat_id').val();
+        $('#new_comm_sat_id').val(select_sat_id);
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "<?php echo Yii::app()->request->baseUrl; ?>/priceGuideV2/submitAdminAddCommission",
+            data: $('#add_comm_form').serialize(),
+            success: function(resp) {
+
+                if (resp.result == "success") {
+
+                    $('#adminAddCommissionModal').modal("toggle");
+                    adminSelectSaleType(select_sat_id);
+
+                }
+            }
+        });
+
+    }
+
+    $(document).ready(function() {
+        // Intercept form submission
+        $("#btn_quick").click(function() {
+            var formClone = $("#quickbook").clone();
+
+            // Get the selected value from the select box
+            var selectedProduct = $(".product_list_main_quickbook").val();
+
+            // Set the target attribute to "_blank"
+            formClone.attr("target", "_blank");
+
+            // Append the selected value as a hidden input to the cloned form
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'selected_product',
+                value: selectedProduct
+            }).appendTo(formClone);
+
+            // Append the cloned form to the body and submit it
+            $("body").append(formClone);
+            formClone.submit();
+
+            // Remove the cloned form from the DOM
+            formClone.remove();
+        });
+    });
+</script>

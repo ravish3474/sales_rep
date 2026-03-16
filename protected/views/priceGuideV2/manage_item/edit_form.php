@@ -1,0 +1,83 @@
+<style type="text/css">
+	.edit_input {
+		width: 100%;
+		min-height: auto !important;
+		max-height: 110px !important;
+		padding: 3px;
+	}
+
+	#edit_prod_item_form>.row div {
+		padding: 5px;
+	}
+
+	.new_input {
+		height: 25px;
+		background: #1479b80d;
+		box-shadow: rgb(100 100 111 / 1%) 0px 7px 29px 0px;
+		border: 1px solid #eee;
+		padding: 20px !important;
+	}
+
+	#edit_prod_item_form select {
+		height: 40px !important;
+	}
+</style>
+<div class="container">
+	<form id="edit_prod_item_form">
+		<div class="row">
+			<h4 class="form-title">Edit item</h4>
+
+			<div class="col-md-12 text-left" style="padding-top: 0px; ">
+				<div class="row" style="padding-top: 0px; ">
+					<div class="col-md-6 text-left">
+						<label for="">Name:</label>
+						<input type="hidden" id="edit_item_id" name="edit_item_id" value="<?php echo $a_item["item_id"]; ?>">
+						<input class="edit_input" type="text" id="edit_item_name" name="edit_item_name" value="<?php echo htmlspecialchars($a_item["item_name"]); ?>">
+					</div>
+					<div class="col-md-6 text-left">
+						<label for="">Group:</label>
+						<?php
+						if (sizeof($a_group) > 0) {
+						?>
+							<select id="edit_item_group" name="edit_item_group" class="edit_input">
+								<option value="==no_group==">== No Group ==</option>
+								<?php
+								for ($i = 0; $i < sizeof($a_group); $i++) {
+								?>
+									<option <?php echo ($a_group[$i]["item_group_id"] == $a_item["group_id"]) ? 'selected' : ''; ?> value="<?php echo $a_group[$i]["item_group_id"] . "#&#" . $a_group[$i]["group_name"]; ?>"><?php echo $a_group[$i]["group_name"]; ?></option>
+								<?php
+								}
+								?>
+							</select>
+						<?php
+						} else {
+							echo '<font color=black>&lt;No group&gt;</font><input type="hidden" name="edit_item_group" value="==no_group==">';
+						}
+						?>
+						<input type="hidden" name="old_group_id" value="<?php echo ($a_item["group_id"] == "") ? "==no_group==" : $a_item["group_id"]; ?>">
+						<input type="hidden" name="edit_prod_id" value="<?php echo $a_item["prod_id"]; ?>">
+						<input type="hidden" name="old_sort" value="<?php echo $a_item["sort"]; ?>">
+					</div>
+				</div>
+
+			</div>
+
+
+			<div class="col-md-12 text-left">
+				<label for="">Details:</label>
+				<textarea class="edit_input" id="edit_item_detail" name="edit_item_detail" rows="5"><?php echo htmlspecialchars($a_item["item_detail"]); ?></textarea>
+			</div>
+		</div>
+		<div class="row">
+
+			<div class="col-md-6 text-left">
+				<label for="">Style:</label>
+				<textarea class="edit_input" id="edit_item_style" name="edit_item_style" rows="5"><?php echo htmlspecialchars($a_item["item_style"]); ?></textarea>
+			</div>
+			<div class="col-md-6 text-left">
+				<label for="">Fabric option:</label>
+				<textarea class="edit_input" id="edit_item_fabric_opt" name="edit_item_fabric_opt" rows="5"><?php echo htmlspecialchars($a_item["item_fabric_opt"]); ?></textarea>
+			</div>
+		</div>
+	</form>
+</div>

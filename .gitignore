@@ -1,0 +1,44 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code local config
+.claude/
+
+# Sensitive config (copy database.php.example and fill in locally)
+protected/config/database.php
+
+# Runtime / logs
+protected/runtime/*
+!protected/runtime/.gitkeep
+
+# User-uploaded files
+protected/uploads/*
+!protected/uploads/.gitkeep
+upload/
+!upload/.gitkeep
+
+# Large SQL dump (not for version control)
+*.sql
+# Exception: small schema/seed files you intentionally track
+!protected/data/mysql/*.sql
+!protected/data/*.sql
+
+# PDF uploads / temp files
+*.pdf
+Adrian\ Meyers\ 2020-02.pdf
+countdebug.txt
+
+# Yii assets cache (regenerated automatically)
+assets/
+
+# Yii framework (large vendor library — commit or use composer/submodule)
+# Uncomment the next line if you want to exclude the framework:
+# framework/
+
+# PHP temp / IDE files
+*.log
+*.swp
+*.swo
+.idea/
+.vscode/
