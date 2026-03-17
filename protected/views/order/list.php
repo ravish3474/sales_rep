@@ -2905,6 +2905,7 @@ echo phpversion();
                         success: function(resp) {
                             $('#note_text').val(resp.note_text);
                             $('#d_quote_body').html(resp.inner_content);
+                            calComm();
                             $('#btn_approve').attr('conv_id', conv_id);
                             $('#quote_history').hide();
 
@@ -2979,6 +2980,7 @@ echo phpversion();
                 success: function(resp) {
                     $('#note_text').val(resp.note_text);
                     $('#d_quote_body').html(resp.inner_content);
+                    calComm();
                     $('#btn_approve').attr('conv_id', conv_id);
                     $('#quote_history').hide();
 
@@ -3184,14 +3186,21 @@ echo phpversion();
         $('.qdoci_id_app').each(function() {
             var row_id = $(this).val();
 
-            tmp_amount = $('#tmp_amount' + row_id).val();
-            comm_percent = $('#comm_percent_app' + row_id).val();
+            var tmp_amount = parseFloat($('#tmp_amount' + row_id).val()) || 0;
+            var comm_percent_input = $('#comm_percent_app' + row_id);
+            var comm_val;
 
-            comm_val = (comm_percent / 100) * tmp_amount;
+            if (tmp_amount < 800) {
+                // Amount under $800: show 0 for both Comm.% and Comm.
+                comm_percent_input.val(0);
+                comm_val = 0;
+            } else {
+                var comm_percent = comm_percent_input.val();
+                comm_val = (comm_percent / 100) * tmp_amount;
+                comm_total += comm_val;
+            }
 
             $('#comm_val_app' + row_id).html(comm_val.toFixed(2));
-
-            comm_total += comm_val;
         });
 
         $('#td_comm_total').html(comm_total.toFixed(2));
