@@ -326,13 +326,13 @@ class OrderController extends AuthController
         // Base query templates
         $year_date_esc = addslashes($year_date);
         $baseQueryEx = "
-            SELECT o.*, q.conv_id, q.qdoci_id
+            SELECT o.*, q.conv_id, q.qdoci_id, q.shipment_status
             FROM `tbl_order` o
             LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
             WHERE `year` = '$year_date_esc' AND ($month_condition) AND `typeofcode` = 'Ex'";
 
         $baseQueryTh = "
-            SELECT o.*, q.conv_id, q.qdoci_id
+            SELECT o.*, q.conv_id, q.qdoci_id, q.shipment_status
             FROM `tbl_order` o
             LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
             WHERE `year` = '$year_date_esc' AND ($month_condition) AND `typeofcode` = 'Th'";
@@ -350,7 +350,8 @@ class OrderController extends AuthController
         if (isset($_POST['searchtbl']) && !empty($_POST['searchtbl'])) {
             $search = addslashes($_POST['searchtbl']);
             $sql = "
-                SELECT o.* FROM `tbl_order` o
+                SELECT o.*, q.shipment_status FROM `tbl_order` o
+                LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
                 WHERE o.`id` LIKE '%$search%' OR
                     o.`JOG_Code` LIKE '%$search%' OR
                     o.`No_Quote` LIKE '%$search%' OR
@@ -382,19 +383,21 @@ class OrderController extends AuthController
 
             if ($salesrepsearch == 'online store') {
                 $sql = "
-                    SELECT * FROM `tbl_order`
-                    WHERE (`typecode` = 'ON')
+                    SELECT o.*, q.shipment_status FROM `tbl_order` o
+                    LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
+                    WHERE (o.`typecode` = 'ON')
                     AND ($month_condition)
                     $checkboxaddedEX
-                    AND `year` = '$year_date_esc'
+                    AND o.`year` = '$year_date_esc'
                 ";
             } else {
                 $sql = "
-                    SELECT * FROM `tbl_order`
-                    WHERE (`Sales_Rep_1` LIKE '%$salesrepsearch%' OR `Sales_Rep_2` LIKE '%$salesrepsearch%')
+                    SELECT o.*, q.shipment_status FROM `tbl_order` o
+                    LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
+                    WHERE (o.`Sales_Rep_1` LIKE '%$salesrepsearch%' OR o.`Sales_Rep_2` LIKE '%$salesrepsearch%')
                     AND ($month_condition)
                     $checkboxaddedEX
-                    AND `year` = '$year_date_esc'
+                    AND o.`year` = '$year_date_esc'
                 ";
             }
 
@@ -912,24 +915,13 @@ class OrderController extends AuthController
                                     </span>
                                 </td>";
 
-                if ($order['approve'] == true) {
-                    $boccolo = "greentd";
-                } else {
-                    $boccolo = " ";
-                }
-
-                if ($user_group == '1' || $user_group == '99') {
-                    $approve = "<td data-col='17' >		
-                                <div class='text-center approve" . $order['id'] . " " . $boccolo . "'>					
-                                    <input type=\"checkbox\" class=\"checkbox forselectall\" id=\"approve_ap_" . $order['id'] . "\" value=\"" . $order['approve'] . "\" " . ($order['approve'] ? 'checked' : '') . ">
-                                </div>
+                $shipment_status = isset($order['shipment_status']) ? (int)$order['shipment_status'] : 0;
+                if ($shipment_status == 1) {
+                    $approve = "<td data-col='17' class='text-center'>
+                                <span title='Shipped' style='display:inline-block;width:16px;height:16px;border-radius:50%;background:#28a745;'></span>
                             </td>";
                 } else {
-                    $approve = "<td data-col='17' >		
-                            <div class='text-center  " . $boccolo . "'>					
-                                <input type=\"checkbox\" class=\"checkbox\" value=\"" . $order['approve'] . "\" " . ($order['approve'] ? 'checked' : '') . ">
-                            </div>
-                        </td>";
+                    $approve = "<td data-col='17'></td>";
                 }
             }
 
