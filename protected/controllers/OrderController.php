@@ -350,7 +350,7 @@ class OrderController extends AuthController
         if (isset($_POST['searchtbl']) && !empty($_POST['searchtbl'])) {
             $search = addslashes($_POST['searchtbl']);
             $sql = "
-                SELECT o.*, q.shipment_status FROM `tbl_order` o
+                SELECT o.*, q.conv_id, q.qdoci_id, q.shipment_status FROM `tbl_order` o
                 LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
                 WHERE o.`id` LIKE '%$search%' OR
                     o.`JOG_Code` LIKE '%$search%' OR
@@ -383,7 +383,7 @@ class OrderController extends AuthController
 
             if ($salesrepsearch == 'online store') {
                 $sql = "
-                    SELECT o.*, q.shipment_status FROM `tbl_order` o
+                    SELECT o.*, q.conv_id, q.qdoci_id, q.shipment_status FROM `tbl_order` o
                     LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
                     WHERE (o.`typecode` = 'ON')
                     AND ($month_condition)
@@ -392,7 +392,7 @@ class OrderController extends AuthController
                 ";
             } else {
                 $sql = "
-                    SELECT o.*, q.shipment_status FROM `tbl_order` o
+                    SELECT o.*, q.conv_id, q.qdoci_id, q.shipment_status FROM `tbl_order` o
                     LEFT JOIN `quotation_data` q ON o.`JOG_Code` = q.`jog_code`
                     WHERE (o.`Sales_Rep_1` LIKE '%$salesrepsearch%' OR o.`Sales_Rep_2` LIKE '%$salesrepsearch%')
                     AND ($month_condition)
@@ -569,7 +569,7 @@ class OrderController extends AuthController
                             <a href='#' style=' opacity: 0;' data-toggle='modal' data-target='#addwutnew' class='EditBtn' onclick='addwutnew(\"up\",\"" . $order['id'] . "\",\"" . $order['sortrow'] . "\")' data-whatever='@mdo'><i class='fa fa-arrow-up aria-hidden='true'></i> </a>
                         </div>
                         <div class='jogcode'>
-                            <a data-toggle='modal' class='cursor-pointer' data-target='#quoteDocModal' onclick='viewQuotationFinal(\"" . $order['qdoci_id'] . "\",\"vp\"," . json_encode($order['JOG_Code']) . ",\"" . $order['conv_id'] . "\");'>" . $order['JOG_Code'] . "</a>
+                            <a data-toggle='modal' class='cursor-pointer' data-target='#quoteDocModal' onclick='viewQuotationFinal(\"" . ($order['qdoci_id'] ?? '') . "\",\"vp\"," . json_encode($order['JOG_Code']) . ",\"" . ($order['conv_id'] ?? '') . "\");'>" . $order['JOG_Code'] . "</a>
                             $sendMailNotif
                             $sendPhoneNotif
                         </div>
@@ -1446,6 +1446,15 @@ class OrderController extends AuthController
 
         $user_group = Yii::app()->user->getState('userGroup');
 
+        // Calculate total product amount excluding shipping to apply $800 commission threshold
+        $non_shipping_total = 0.0;
+        foreach ($a_qitem as $row_qitem_tmp) {
+            if (stripos($row_qitem_tmp["pro_name"], "shipping") === false) {
+                $non_shipping_total += $row_qitem_tmp["qty"] * $row_qitem_tmp["uprice"];
+            }
+        }
+        $apply_zero_comm = ($non_shipping_total < 800);
+
         foreach ($a_qitem as $tmp_key => $row_qitem) {
 
             $pro_id = $row_qitem["pro_id"];
@@ -1454,7 +1463,7 @@ class OrderController extends AuthController
             $comm_percent = $row_qitem["comm_percent"];
             $comm_value = "";
             $tmp_comm_percent = 0;
-            if ($comm_percent != "") {
+            if ($comm_percent != "" && !$apply_zero_comm) {
                 $tmp_comm_percent = intval(str_replace("%", "", $comm_percent));
                 $comm_value = ($qty * $uprice) * ($tmp_comm_percent / 100);
                 $comm_total += $comm_value;
