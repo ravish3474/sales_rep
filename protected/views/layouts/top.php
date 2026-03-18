@@ -2749,6 +2749,11 @@ $currency_map = [
                 </div>
                 <div id="quote_content_his" class="modal-body" style="  display: none;"></div>
                 <div id="quote_approve_bar" class="modal-footer">
+                    <div id="btn_commission_row" style="display:none; float:left; padding: 4px 0;">
+                        <span id="comm_total_label" style="margin-right:10px; font-weight:bold; line-height:32px;"></span>
+                        <button id="btn_comm_1" type="button" class="btn btn-warning" onclick="gotoCommission(1);"></button>
+                        <button id="btn_comm_2" type="button" class="btn btn-warning" style="display:none; margin-left:5px;" onclick="gotoCommission(2);"></button>
+                    </div>
                     <!-- <button style="float:right;" type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
                     <?php
                     if (Yii::app()->controller->id != "quoteEstimate") {
@@ -2893,6 +2898,11 @@ $currency_map = [
                 </div>
                 <div id="quote_content_his" class="modal-body" style="  display: none;"></div>
                 <div id="quote_approve_bar" class="modal-footer">
+                    <div id="btn_commission_row" style="display:none; float:left; padding: 4px 0;">
+                        <span id="comm_total_label" style="margin-right:10px; font-weight:bold; line-height:32px;"></span>
+                        <button id="btn_comm_1" type="button" class="btn btn-warning" onclick="gotoCommission(1);"></button>
+                        <button id="btn_comm_2" type="button" class="btn btn-warning" style="display:none; margin-left:5px;" onclick="gotoCommission(2);"></button>
+                    </div>
                     <!-- <button style="float:right;" type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
                     <?php
                     if (Yii::app()->controller->id != "quoteEstimate") {

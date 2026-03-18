@@ -25,7 +25,8 @@ class Calculator extends CActiveRecord
 			array('invoice_mail_customer', 'email','message'=>"The email isn't correct"),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, invoice, order_name, date_quarter, total_sales, shipping_cost, creditcard_feecost, royalty_feecost, comp_itemcost, commission_percent, commission, invoice_status, date_for_sales, pay_for_sales, sales_manager, sales_status currency, file_path, payment_method, invoice_mail_name, status_commission, invoice_mail_status, invoice_mail_customer, invoice_mail_subject, invoice_mail_detail,invoice_date, invoice_amount_received, invoice_payment_method, commisson_payment_status, order_no', 'safe', 'on'=>'search'),
+			array('id, invoice, order_name, date_quarter, total_sales, shipping_cost, creditcard_feecost, royalty_feecost, sales_tax, comp_itemcost, commission_percent, commission, invoice_status, date_for_sales, pay_for_sales, sales_manager, sales_status currency, file_path, payment_method, invoice_mail_name, status_commission, invoice_mail_status, invoice_mail_customer, invoice_mail_subject, invoice_mail_detail,invoice_date, invoice_amount_received, invoice_payment_method, commisson_payment_status, order_no', 'safe', 'on'=>'search'),
+			array('sales_tax', 'numerical'),
 		);
 	}
 
@@ -56,6 +57,7 @@ class Calculator extends CActiveRecord
 			'shipping_cost'   			=> 'Shipping Cost',
 			'creditcard_feecost'   		=> 'Credit Card Fee',
 			'royalty_feecost'   		=> 'Royalty Fee',
+			'sales_tax'   				=> 'Sales Tax',
 			'comp_itemcost'   			=> 'Comp. Item Cost',
 			'commission_percent'    	=> 'Commission%',
 			'commission'        		=> 'Commissionable Sales (%)',

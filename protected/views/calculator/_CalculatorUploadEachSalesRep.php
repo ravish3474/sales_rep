@@ -55,6 +55,11 @@
 		}
 	}
 
+	// Allow total_sales to be pre-filled from the URL when coming from the commission selector
+	if (isset($_GET['total_sales']) && is_numeric($_GET['total_sales'])) {
+		$total = (float)$_GET['total_sales'];
+	}
+
 ?>
 <style>
 .datepicker-days,
@@ -158,7 +163,7 @@
 	<div class="form-group">	
 		<label class=" col-md-3 col-sm-3 col-xs-12"><?php echo $model->getAttributeLabel('invoice_amount_received'); ?></label>
 		<div class="col-md-9 col-sm-6 col-xs-12">
-			<?php echo $form->numberField($model, 'invoice_amount_received', array('class' => 'form-control numeric','step' => '0.01','value' => '0')); ?>
+			<?php echo $form->numberField($model, 'invoice_amount_received', array('class' => 'form-control numeric','step' => '0.01','value' => $total)); ?>
 		</div>
 	</div>
 
@@ -238,6 +243,13 @@
 		<div class="col-md-3 col-sm-3 col-xs-12">
 			<?php echo $form->numberField($model, 'royalty_feecost', array('class' => 'form-control numeric', 'step' => '0.01', 'value' => '0')); ?>
 		</div>		
+	</div>
+
+	<div class="form-group">
+		<label class=" col-md-3 col-sm-3 col-xs-12"><?php echo $model->getAttributeLabel('sales_tax'); ?></label>
+		<div class="col-md-3 col-sm-3 col-xs-12">
+			<?php echo $form->numberField($model, 'sales_tax', array('class' => 'form-control numeric', 'step' => '0.01', 'value' => '0')); ?>
+		</div>
 	</div>
 
 	<!-- <div class="form-group group-header">
@@ -416,6 +428,16 @@
 
 
 
+<script>
+(function() {
+    var $totalSales = $('#Calculator_total_sales');
+    var $amtReceived = $('#Calculator_invoice_amount_received');
+    // Sync Amount Received to match Total Sales on change
+    $totalSales.on('input change', function() {
+        $amtReceived.val($(this).val());
+    });
+})();
+</script>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				<button type="submit" class="btn btn-primary" >Save</button>

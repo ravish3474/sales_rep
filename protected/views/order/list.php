@@ -2905,6 +2905,7 @@ echo phpversion();
                         success: function(resp) {
                             $('#note_text').val(resp.note_text);
                             $('#d_quote_body').html(resp.inner_content);
+                            if (_commData) _showCommissionButtons();
                             $('#btn_approve').attr('conv_id', conv_id);
                             $('#quote_history').hide();
 
@@ -2979,6 +2980,7 @@ echo phpversion();
                 success: function(resp) {
                     $('#note_text').val(resp.note_text);
                     $('#d_quote_body').html(resp.inner_content);
+                    if (_commData) _showCommissionButtons();
                     $('#btn_approve').attr('conv_id', conv_id);
                     $('#quote_history').hide();
 
@@ -3039,6 +3041,13 @@ echo phpversion();
         }
 
     }
+</script>
+<script>
+    // Reset commission context when the estimate modal is closed
+    $(document).on('hidden.bs.modal', '#quoteDocModal', function() {
+        _commData = null;
+        $('#btn_commission_row').hide();
+    });
 </script>
 <script>
     jQuery(function() {
@@ -4180,36 +4189,100 @@ echo phpversion();
         }
     }
 
+    // Global state for commission flow
+    var _commData = null;
+
     function openCommissionData(jogcode, sales1, sales2, years, per, per2, invno, invlnk, month, ordname) {
         var html = '';
 
-        //$('#salesrapuserbtn').html('Online Store Report');
+        // Store commission context for later use by the Comm buttons
+        _commData = {
+            jogcode: jogcode, sales1: sales1, sales2: sales2,
+            years: years, per: per, per2: per2,
+            invno: invno, invlnk: invlnk, month: month, ordname: ordname
+        };
 
-        $.ajax({
-            type: 'POST',
-            url: 'fetchsalesData',
-            data: {
-                jogCode: jogcode,
-                salesRep1: sales1,
-                sales2: sales2,
-                year: years,
-                per: per,
-                per2: per2,
-                invno: invno,
-                invlnk: invlnk,
-                month: month,
-                ordname: ordname,
+        // Hide commission buttons while loading
+        $('#btn_commission_row').hide();
 
-            },
-            success: function(response) {
-
-                $('#salesrapuserbtn').html(response);
-            },
-            error: function() {
-                // Handle errors
-            }
-        });
+        // Load the estimate in the modal using action_from="vc" so checkboxes are visible
+        viewQuotationFinal('', 'vc', jogcode, '');
     }
+
+    // Called after the estimate loads to show the commission buttons
+    function _showCommissionButtons() {
+        if (!_commData) return;
+
+        var baseUrl = '<?php echo Yii::app()->request->baseUrl; ?>';
+
+        // Calculate total from checked items
+        var total = 0;
+        $('.comm-item-checkbox:checked').each(function() {
+            total += parseFloat($(this).data('amount')) || 0;
+        });
+        total = Math.round(total * 100) / 100;
+
+        var label = total > 0
+            ? 'Selected: ' + total.toFixed(2) + ' &nbsp;|'
+            : '';
+        $('#comm_total_label').html(label);
+
+        // Hide print button — not relevant in commission selection mode
+        $('#btn_print').hide();
+
+        // Button 1: Sales Rep 1
+        if (_commData.sales1) {
+            $('#btn_comm_1')
+                .text(_commData.sales1.split(' ')[0] + "'s Comm")
+                .show();
+            $('#btn_commission_row').show();
+        }
+
+        // Button 2: Sales Rep 2 (if present)
+        if (_commData.sales2) {
+            $('#btn_comm_2')
+                .text(_commData.sales2.split(' ')[0] + "'s Comm")
+                .show();
+        } else {
+            $('#btn_comm_2').hide();
+        }
+    }
+
+    // Navigate to SalesCommission page for a given sales rep
+    function gotoCommission(repNum) {
+        if (!_commData) return;
+        var baseUrl = '<?php echo Yii::app()->request->baseUrl; ?>';
+
+        var sales = (repNum === 2) ? _commData.sales2 : _commData.sales1;
+        var per   = (repNum === 2) ? _commData.per2   : _commData.per;
+
+        // Sum checked items
+        var total = 0;
+        $('.comm-item-checkbox:checked').each(function() {
+            total += parseFloat($(this).data('amount')) || 0;
+        });
+        total = Math.round(total * 100) / 100;
+
+        var url = baseUrl + '/calculator/SalesCommission/year/' + _commData.years
+            + '/sales/' + encodeURIComponent(sales)
+            + '?invno=' + encodeURIComponent(_commData.invno)
+            + '&per=' + encodeURIComponent(per)
+            + '&jogcode=' + encodeURIComponent(_commData.jogcode)
+            + '&invlnk=' + encodeURIComponent(_commData.invlnk)
+            + '&ordnm=' + encodeURIComponent(_commData.ordname)
+            + '&month=' + encodeURIComponent(_commData.month);
+
+        if (total > 0) {
+            url += '&total_sales=' + total;
+        }
+
+        window.open(url, '_blank');
+    }
+
+    // Update commission total when checkboxes change
+    $(document).on('change', '.comm-item-checkbox', function() {
+        _showCommissionButtons();
+    });
 
     $(document).on('submit', '#upload_sample', function(e) {
         e.preventDefault();

@@ -564,12 +564,13 @@ class OrderController extends AuthController
                             $sendPhoneNotif = '';
                         }
                     
+                    $tmp_invlnk = explode(',', $order['Invlink']);
                     $jogcode = "
                         <div>   
                             <a href='#' style=' opacity: 0;' data-toggle='modal' data-target='#addwutnew' class='EditBtn' onclick='addwutnew(\"up\",\"" . $order['id'] . "\",\"" . $order['sortrow'] . "\")' data-whatever='@mdo'><i class='fa fa-arrow-up aria-hidden='true'></i> </a>
                         </div>
                         <div class='jogcode'>
-                            <a data-toggle='modal' class='cursor-pointer' data-target='#quoteDocModal' onclick='viewQuotationFinal(\"" . ($order['qdoci_id'] ?? '') . "\",\"vp\"," . json_encode($order['JOG_Code']) . ",\"" . ($order['conv_id'] ?? '') . "\");'>" . $order['JOG_Code'] . "</a>
+                            <a data-toggle='modal' class='cursor-pointer' data-target='#quoteDocModal' onclick='openCommissionData(" . json_encode($order['JOG_Code']) . "," . json_encode($order['Sales_Rep_1']) . "," . json_encode($order['Sales_Rep_2']) . "," . json_encode($order['year']) . "," . json_encode($order['Percentage_1']) . "," . json_encode($order['Percentage_2']) . "," . json_encode($order['Inv_no']) . "," . json_encode($tmp_invlnk[0]) . "," . json_encode($order['month']) . "," . json_encode($order['Order_Name']) . ");'>" . $order['JOG_Code'] . "</a>
                             $sendMailNotif
                             $sendPhoneNotif
                         </div>
@@ -882,7 +883,7 @@ class OrderController extends AuthController
                     
                     $btncalculator = "<td data-col='15' class='text-center'>
                                 <div class='commdiv " . $carclass . "'>
-                                    <a href='#' class='btn " . $btncolor . "' data-toggle='modal' data-target='#Commission' onclick=\"openCommissionData('" . $order['JOG_Code'] . "','" . $order['Sales_Rep_1'] . "','" . $order['Sales_Rep_2'] . "','" . $order['year'] . "','" . $order['Percentage_1'] . "','" . $order['Percentage_2'] . "','" . $order['Inv_no'] . "','" . $link_ary['0'] . "','" . $order['month'] . "','" . str_replace("'", "\\'", $order['Order_Name']) . "')\"> " . $btntext . " </a>
+                                    <a href='#' class='btn " . $btncolor . "' data-toggle='modal' data-target='#quoteDocModal' onclick=\"openCommissionData('" . $order['JOG_Code'] . "','" . $order['Sales_Rep_1'] . "','" . $order['Sales_Rep_2'] . "','" . $order['year'] . "','" . $order['Percentage_1'] . "','" . $order['Percentage_2'] . "','" . $order['Inv_no'] . "','" . $link_ary['0'] . "','" . $order['month'] . "','" . str_replace("'", "\\'", $order['Order_Name']) . "')\"> " . $btntext . " </a>
                                     </div>
                                     " . $carshtml . "
                                 
@@ -903,7 +904,7 @@ class OrderController extends AuthController
                     $order_name_encoded = urlencode($order['Order_Name']);
                     $btncalculator = "<td data-col='15' class='text-center'>
                             <div class='commdiv " . $carclass . "'>					
-                                <a href='" . $base . "/calculator/SalesCommission/year/" . $order['year'] . "/sales/" . $order['Sales_Rep_1'] . "?invno=" . $order['Inv_no'] . "&per=" . $order['Percentage_1'] . "&jogcode=" . $order['JOG_Code'] . "&invlnk=" . $link_ary['0'] . "&ordnm=" . $order_name_encoded . "&month=" . $order['month'] . "' class='btn " . $btncolor . "' target='_blank'> " . $btntext . "</a>                            
+                                <a href='#' class='btn " . $btncolor . "' data-toggle='modal' data-target='#quoteDocModal' onclick=\"openCommissionData('" . $order['JOG_Code'] . "','" . $order['Sales_Rep_1'] . "','','" . $order['year'] . "','" . $order['Percentage_1'] . "','0','" . $order['Inv_no'] . "','" . $link_ary['0'] . "','" . $order['month'] . "','" . str_replace("'", "\\'" , $order['Order_Name']) . "')\"> " . $btntext . "</a>                            
                                 </div>
                                 " . $carshtml . "
                         </td>";
@@ -1428,7 +1429,14 @@ class OrderController extends AuthController
         $return_html .= '</td></tr>';
         $return_html .= '<tr><td colspan="2">';
         $return_html .= '<table style="color:#000; width:100%;" id="product_list">';
-        $return_html .= '<tr style="font-size: 15px;"><th width="55%" style="text-align:left;">Product</th>';
+        if (!isset($user_group)) {
+            $user_group = Yii::app()->user->getState('userGroup');
+        }
+        $return_html .= '<tr style="font-size: 15px;">';
+        if ($action_from == "vc" && ($user_group == "1" || $user_group == "99")) {
+            $return_html .= '<th style="width:30px;"></th>';
+        }
+        $return_html .= '<th width="55%" style="text-align:left;">Product</th>';
 
         $return_html .= '<th style="text-align:center; color:#999;">Comm.%</th><th style="text-align:center; color:#999;">Comm.</th>';
         $return_html .= '<th style="text-align:center; width:80px;">Quantity</th><th style="text-align:center; width:80px;">Price</th><th style="text-align:right; width:80px;">Amount</th></tr>';
@@ -1471,7 +1479,27 @@ class OrderController extends AuthController
 
             $tmp_amount = $qty * $uprice;
 
-            $return_html .= '<tr><td style="padding:10px 0px; text-align:left; display: block; white-space: pre-wrap; word-break: break-all; word-wrap: break-word;">';
+            $return_html .= '<tr>';
+            // Commission checkbox column — only shown during commission selection (vc mode, admin only)
+            if ($action_from == "vc" && ($user_group == "1" || $user_group == "99")) {
+                // Pre-check all items except those excluded from commissionable sales
+                $pro_name_lower = strtolower($row_qitem["pro_name"]);
+                $is_excluded = (
+                    strpos($pro_name_lower, 'shipping')    !== false ||
+                    strpos($pro_name_lower, 'credit card') !== false ||
+                    strpos($pro_name_lower, 'creditcard')  !== false ||
+                    strpos($pro_name_lower, 'royalty')     !== false ||
+                    strpos($pro_name_lower, 'namebar')     !== false ||
+                    strpos($pro_name_lower, 'name bar')    !== false ||
+                    strpos($pro_name_lower, 'patch')       !== false
+                );
+                $checked_attr = $is_excluded ? '' : 'checked';
+                $return_html .= '<td style="text-align:center; width:30px; vertical-align:top; padding:10px 4px;">'
+                    . '<input type="checkbox" class="comm-item-checkbox" data-amount="' . $tmp_amount . '" ' . $checked_attr . ' title="Include in commission" '
+                    . 'style="width:18px;height:18px;cursor:pointer;">'
+                    . '</td>';
+            }
+            $return_html .= '<td style="padding:10px 0px; text-align:left; display: block; white-space: pre-wrap; word-break: break-all; word-wrap: break-word;">';
             /*$return_html .= '<input type="hidden" name="quote_curr" value="'.$_POST["quote_curr"].'">';
 			$return_html .= '<input type="hidden" name="pro_id[]" value="'.$product_id.'">';
 			$return_html .= '<input type="hidden" name="comm_percent[]" value="'.$_POST["comm_percent"][$i].'">';
