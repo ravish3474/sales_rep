@@ -1880,7 +1880,7 @@ echo phpversion();
         <div class="x_title" style="position:relative;">
             <div class="row">
                 <div class="col-lg-9 col-md-12 col-sm-12 col-12 float top-left-side" style="border: 1px solid #eee;">
-                    <form class="form-inline" id="orderForm" action="/order/listdata" method="POST">
+                    <form class="form-inline" id="orderForm" action="<?php echo Yii::app()->request->baseUrl; ?>/order/listdata" method="POST">
                         <div class="form-group">
                             <label for="months">Month</label>
                             <select class="form-select" name="year_month" id="months">
@@ -2011,7 +2011,7 @@ echo phpversion();
                         <h2 class="card-title">Search Order (Any Month/Year)</h2>
                     </div>
                     <div class="header-Search">
-                        <form class="form-inline" id="search_value" action="/order/listdata" method="POST">
+                        <form class="form-inline" id="search_value" action="<?php echo Yii::app()->request->baseUrl; ?>/order/listdata" method="POST">
                             <input class="w-100 form-control mr-sm-2" type="search" placeholder="Search" name="searchtbl" aria-label="Search">
                             <button class="btn btn-outline-success my-2 my-sm-0 " type="submit"><i class="fa fa-search" aria-hidden="true"></i>
                             </button>
@@ -2023,7 +2023,7 @@ echo phpversion();
                         <h2 class="card-title">Search SalesRep (BY Month/Year)</h2>
                     </div>
                     <div class="header-Search2 header-Search ">
-                        <form class="form-inline" id="salesRep" action="/salesrep/order/listdata" method="POST">
+                        <form class="form-inline" id="salesRep" action="<?php echo Yii::app()->request->baseUrl; ?>/order/listdata" method="POST">
                             <select class="form-select w-100" name="salesrep" id="salesRepnamechange">
                                 <option value="">search by sales</option>
                                 <option value="online store">Online Store</option>
@@ -2208,11 +2208,7 @@ echo phpversion();
                                     <th id="col15" class="text-center" style="padding: 5px;">Commission</th>
                                     <th id="col16" class="text-center" style="padding: 5px;">Action</th>
                                     <th id="col17" class="text-center" style="padding: 5px;">
-                                        Approve
-                                        <div>
-                                            <span class="selectall"> &nbsp;<input type="checkbox" id="selectallapprove" name="selectallapprove"></span>
-
-                                        </div>
+                                        Shipment Status
                                     </th>
                                 <?php } ?>
 
@@ -3222,7 +3218,7 @@ echo phpversion();
         if (!$.fn.DataTable.isDataTable('#orderTable')) {
             orderTable = $('#orderTable').DataTable({
                 ajax: {
-                    url: '/order/listdata',
+                    url: '<?php echo Yii::app()->request->baseUrl; ?>/order/listdata',
                     type: 'POST',
                     data: function(d) {
                         var formData = $('#orderForm, #search_value, #salesRep').serializeArray();
@@ -3245,13 +3241,6 @@ echo phpversion();
                     targets: '_all'
                 }],
                 drawCallback: function() {
-                    var allChecked = true;
-                    $('#orderTable .forselectall').each(function() {
-                        if (!$(this).is(':checked')) {
-                            allChecked = false;
-                        }
-                    });
-                    $('#selectallapprove').prop('checked', allChecked);
                 },
                 initComplete: function() {
                     // After DataTable is fully loaded, allow reloads
@@ -3783,137 +3772,41 @@ echo phpversion();
             var fieldName = $(this).attr('id').split('_')[0]; // Extracting the field name (No_Quote or QB_Draft)
             var value = $(this).is(':checked') ? 1 : 0; // Converting checkbox state to 1 (checked) or 0 (unchecked)
 
-            if (fieldName == 'approve') {
-                if (!confirm('Are you sure you want to Approve ?')) {
-                    event.isDefaultPrevented(); // Prevent the default action if user clicks "No"
-                    $(this).prop('checked', !value); // Reset dropdown to its initial value
-                    return;
+            $.ajax({
+                type: 'POST',
+                url: 'UpdatList', // Replace with your PHP file to handle the update
+                data: {
+                    id: id,
+                    field: fieldName,
+                    value: value
+                },
+                success: function(response) {
+                    if (fieldName == 'no' && value == 1) {
+                        $('.no_quote_' + id + '').addClass("redtd");
+                    }
+                    if (fieldName == 'no' && value == 0) {
+                        $('.no_quote_' + id + '').removeClass("redtd");
+                    }
+                    // Handle success response if needed
+
+                    if (fieldName == 'qb' && value == 1) {
+                        $('.qb_draft_' + id + '').addClass("bluetd");
+                    }
+                    if (fieldName == 'qb' && value == 0) {
+                        $('.qb_draft_' + id + '').removeClass("bluetd");
+                    }
+                    console.log(response);
+                },
+                error: function(xhr, status, error) {
+                    // Handle error response if needed
+                    console.error(xhr.responseText);
                 }
-                $.ajax({
-                    type: 'POST',
-                    url: 'UpdatList', // Replace with your PHP file to handle the update
-                    data: {
-                        id: id,
-                        field: fieldName,
-                        value: value
-                    },
-                    success: function(response) {
-                        if (fieldName == 'approve' && value == 1) {
-
-                            $('.approve' + id + '').addClass("greentd");
-                        }
-                        if (fieldName == 'approve' && value == 0) {
-                            $('.approve' + id + '').removeClass("greentd");
-                        }
-                        // Handle success response if needed
-                        console.log(response);
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle error response if needed
-                        console.error(xhr.responseText);
-                    }
-                });
-            } else {
-                $.ajax({
-                    type: 'POST',
-                    url: 'UpdatList', // Replace with your PHP file to handle the update
-                    data: {
-                        id: id,
-                        field: fieldName,
-                        value: value
-                    },
-                    success: function(response) {
-                        if (fieldName == 'no' && value == 1) {
-                            $('.no_quote_' + id + '').addClass("redtd");
-                        }
-                        if (fieldName == 'no' && value == 0) {
-                            $('.no_quote_' + id + '').removeClass("redtd");
-                        }
-                        // Handle success response if needed
-
-                        if (fieldName == 'qb' && value == 1) {
-                            $('.qb_draft_' + id + '').addClass("bluetd");
-                        }
-                        if (fieldName == 'qb' && value == 0) {
-                            $('.qb_draft_' + id + '').removeClass("bluetd");
-                        }
-                        console.log(response);
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle error response if needed
-                        console.error(xhr.responseText);
-                    }
-                });
-            }
+            });
 
 
             // Send AJAX request to update the data
 
         });
-
-        $(document).ready(function() {
-            $('#selectallapprove').change(function(event) {
-                var isChecked = $(this).is(':checked');
-
-                if (isChecked == 0) {
-                    if (!confirm('Are you sure you want to Disapprove ?')) {
-                        event.preventDefault(); // Prevent the default action if user clicks "No"
-                        $(this).prop('checked', !isChecked); // Reset dropdown to its initial value
-                        return;
-                    }
-                } else {
-                    if (!confirm('Are you sure you want to Approve ?')) {
-                        event.preventDefault(); // Prevent the default action if user clicks "No"
-                        $(this).prop('checked', !isChecked); // Reset dropdown to its initial value
-                        return;
-                    }
-                }
-
-                $('#totprinew').html('<div id="preloaderew" style="position: fixed;top: 0;left: 0;width: 100%;height: 100%;background: rgba(255, 255, 255, 0.8);display: flex;align-items: center;justify-content: center;z-index: 9999;"> <div class="spinner" style="border: 16px solid #f3f3f3;border-top: 16px solid #3498db;border-radius: 50%;width: 120px;height: 120px;animation: spin 2s linear infinite;"></div></div>');
-                var ajaxRequests = [];
-                $('#orderTable .checkbox').each(function() {
-                    var checkbox = $(this);
-                    var id = checkbox.attr('id').split('_')[2];
-                    var fieldName = 'approve';
-                    var value = isChecked ? 1 : 0;
-
-                    checkbox.prop('checked', isChecked);
-
-                    // Store the AJAX request in the array
-                    ajaxRequests.push($.ajax({
-                        type: 'POST',
-                        url: 'UpdatList',
-                        data: {
-                            id: id,
-                            field: fieldName,
-                            value: value
-                        },
-                        success: function(response) {
-                            if (fieldName == 'approve' && value == 1) {
-                                $('.approve' + id).addClass("greentd");
-                            }
-                            if (fieldName == 'approve' && value == 0) {
-                                $('.approve' + id).removeClass("greentd");
-                            }
-                            console.log(response);
-                        },
-                        error: function(xhr, status, error) {
-                            console.error(xhr.responseText);
-                        }
-                    }));
-                });
-
-                // Wait for all AJAX requests to complete
-                $.when.apply($, ajaxRequests).done(function() {
-                    $('#totprinew').html(''); // Hide the preloader once all requests are complete
-
-                    event.preventDefault();
-                    $(this).prop('checked', !isChecked);
-
-                });
-            });
-        });
-
 
     });
 
