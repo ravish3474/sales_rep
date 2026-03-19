@@ -181,7 +181,7 @@
 
 										if ($value_sum['invoice_status'] == "Paid") {
 											if ($value_sum['commisson_payment_status'] == "Paid") {
-												$balanceUSD[$key]  += (($value_sum['commission']  - $value_sum['pay_for_sales']))-$value_data['pay_by_credit'];
+												$balanceUSD[$key]  += (($value_sum['commission']  - $value_sum['pay_for_sales']))-$value_sum['pay_by_credit'];
 
 												$sumPayCreditUSD[$key] += $value_sum['pay_by_credit'];
 											} else {
