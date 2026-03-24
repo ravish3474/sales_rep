@@ -3213,8 +3213,7 @@ echo phpversion();
             var comm_val;
 
             if (tmp_amount < 800) {
-                // Amount under $800: show 0 for both Comm.% and Comm.
-                comm_percent_input.val(0);
+                // Amount under $800: show 0 for Comm. display only, do not reset the input
                 comm_val = 0;
             } else {
                 var comm_percent = comm_percent_input.val();
@@ -4554,7 +4553,9 @@ echo phpversion();
             var amt = parseFloat($(this).data('amount')) || 0;
             commTotal += amt;
             if ($(this).data('shipping') != '1') {
-                var itemPer = parseFloat($(this).data('commpercent')) || 0;
+                var qdoci = $(this).data('qdoci');
+                var liveInput = $('#comm_percent_app' + qdoci);
+                var itemPer = liveInput.length ? (parseFloat(liveInput.val()) || 0) : (parseFloat($(this).data('commpercent')) || 0);
                 if (itemPer > maxPer) { maxPer = itemPer; }
             }
         });
