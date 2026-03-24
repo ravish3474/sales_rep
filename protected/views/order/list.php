@@ -4548,18 +4548,17 @@ echo phpversion();
             return false;
         }
 
-        // Sum amounts and compute weighted-average commission % from checked items
-        // Shipping items are excluded from the commission % calculation
-        var commTotal = 0, weightedPer = 0, nonShippingTotal = 0;
+        // Sum amounts from checked items; commission % = max non-zero % among non-shipping items
+        var commTotal = 0, maxPer = 0;
         $('.comm_item_checkbox:checked').each(function() {
             var amt = parseFloat($(this).data('amount')) || 0;
             commTotal += amt;
             if ($(this).data('shipping') != '1') {
-                weightedPer += amt * (parseFloat($(this).data('commpercent')) || 0);
-                nonShippingTotal += amt;
+                var itemPer = parseFloat($(this).data('commpercent')) || 0;
+                if (itemPer > maxPer) { maxPer = itemPer; }
             }
         });
-        var per  = nonShippingTotal > 0 ? String(Math.round(weightedPer / nonShippingTotal)) : '0';
+        var per  = String(Math.round(maxPer));
         var per2 = per;
         commTotal = commTotal.toFixed(2);
 
