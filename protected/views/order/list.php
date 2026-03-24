@@ -4549,13 +4549,17 @@ echo phpversion();
         }
 
         // Sum amounts and compute weighted-average commission % from checked items
-        var commTotal = 0, weightedPer = 0;
+        // Shipping items are excluded from the commission % calculation
+        var commTotal = 0, weightedPer = 0, nonShippingTotal = 0;
         $('.comm_item_checkbox:checked').each(function() {
             var amt = parseFloat($(this).data('amount')) || 0;
             commTotal += amt;
-            weightedPer += amt * (parseFloat($(this).data('commpercent')) || 0);
+            if ($(this).data('shipping') != '1') {
+                weightedPer += amt * (parseFloat($(this).data('commpercent')) || 0);
+                nonShippingTotal += amt;
+            }
         });
-        var per  = commTotal > 0 ? (weightedPer / commTotal).toFixed(2) : '0';
+        var per  = nonShippingTotal > 0 ? (weightedPer / nonShippingTotal).toFixed(2) : '0';
         var per2 = per;
         commTotal = commTotal.toFixed(2);
 
