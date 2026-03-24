@@ -4539,8 +4539,6 @@ echo phpversion();
         var sales2   = $('#quote_sales2').val() || '';
         var year     = $('#quote_year').val() || '';
         var month    = $('#quote_month').val() || '';
-        var per      = $('#quote_per').val() || '0';
-        var per2     = $('#quote_per2').val() || '0';
         var invno    = $('#quote_invno').val() || '';
         var invlnk   = $('#quote_invlnk').val() || '';
         var ordname  = $('#quote_ordname').val() || '';
@@ -4550,11 +4548,15 @@ echo phpversion();
             return false;
         }
 
-        // Sum amounts from checked commission checkboxes
-        var commTotal = 0;
+        // Sum amounts and compute weighted-average commission % from checked items
+        var commTotal = 0, weightedPer = 0;
         $('.comm_item_checkbox:checked').each(function() {
-            commTotal += parseFloat($(this).data('amount')) || 0;
+            var amt = parseFloat($(this).data('amount')) || 0;
+            commTotal += amt;
+            weightedPer += amt * (parseFloat($(this).data('commpercent')) || 0);
         });
+        var per  = commTotal > 0 ? (weightedPer / commTotal).toFixed(2) : '0';
+        var per2 = per;
         commTotal = commTotal.toFixed(2);
 
         var excludedReps = ['JOG SPORTS', 'Jog Sports', 'FREE', 'REMAKE', 'SAMPLE', 'CANCEL', ''];
