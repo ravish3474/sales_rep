@@ -2874,6 +2874,8 @@ echo phpversion();
         $('#btn_print').hide();
         $('#btn_save').hide();
         $('#btn_refresh_date').hide();
+        $('#btn_comm_rep').hide();
+        $('#btn_comm_rep_2').hide();
         //$('#d_quote_below').hide();
         $('#sp_remark').hide();
         if (action_from != "va") {
@@ -2961,6 +2963,16 @@ echo phpversion();
                                 }
                             })
 
+                            // Show commission button after content loads
+                            var salesNameComm = $('#quote_sales_name').val();
+                            if (salesNameComm) {
+                                $('#btn_comm_rep_label').text(salesNameComm + "'s Comm");
+                                $('#btn_comm_rep_label_2').text(salesNameComm + "'s Comm");
+                                $('#btn_comm_rep').show();
+                                $('#btn_comm_rep_2').show();
+                            }
+                            recalcCommTotal();
+
                         }
                     });
 
@@ -3035,6 +3047,16 @@ echo phpversion();
                             }
                         }
                     })
+
+                    // Show commission button after content loads
+                    var salesNameComm2 = $('#quote_sales_name').val();
+                    if (salesNameComm2) {
+                        $('#btn_comm_rep_label').text(salesNameComm2 + "'s Comm");
+                        $('#btn_comm_rep_label_2').text(salesNameComm2 + "'s Comm");
+                        $('#btn_comm_rep').show();
+                        $('#btn_comm_rep_2').show();
+                    }
+                    recalcCommTotal();
 
                 }
             });
@@ -4189,7 +4211,7 @@ echo phpversion();
         }
     }
 
-    function openCommissionData(jogcode, sales1, sales2, years, per, per2, invno, invlnk, month, ordname) {
+    function openCommissionData(jogcode, sales1, sales2, years, per, per2, invno, invlnk, month, ordname, commTotal) {
         var html = '';
 
         //$('#salesrapuserbtn').html('Online Store Report');
@@ -4208,6 +4230,7 @@ echo phpversion();
                 invlnk: invlnk,
                 month: month,
                 ordname: ordname,
+                comm_total: commTotal || 0,
 
             },
             success: function(response) {
@@ -4494,6 +4517,68 @@ echo phpversion();
             })
         }
     }
+
+    /**
+     * Update commission button label with sales rep name from the JOG Code modal.
+     */
+    function recalcCommTotal() {
+        var salesName = $('#quote_sales_name').val() || 'Comm';
+        var labelText = salesName + "'s Comm";
+        $('#btn_comm_rep_label').text(labelText);
+        $('#btn_comm_rep_label_2').text(labelText);
+    }
+
+    /**
+     * Open the existing Sales Commission Calculator via the standard flow.
+     * When there are two sales reps, opens the #Commission modal.
+     * When there is one sales rep, opens the calculator page directly in a new tab.
+     */
+    function openCommFromQuote() {
+        var jogCode  = $('#quote_jog_code').val() || '';
+        var sales1   = $('#quote_sales_name').val() || '';
+        var sales2   = $('#quote_sales2').val() || '';
+        var year     = $('#quote_year').val() || '';
+        var month    = $('#quote_month').val() || '';
+        var per      = $('#quote_per').val() || '0';
+        var per2     = $('#quote_per2').val() || '0';
+        var invno    = $('#quote_invno').val() || '';
+        var invlnk   = $('#quote_invlnk').val() || '';
+        var ordname  = $('#quote_ordname').val() || '';
+
+        if (!jogCode || !sales1) {
+            alert('Commission data not available for this estimate.');
+            return false;
+        }
+
+        // Sum amounts from checked commission checkboxes
+        var commTotal = 0;
+        $('.comm_item_checkbox:checked').each(function() {
+            commTotal += parseFloat($(this).data('amount')) || 0;
+        });
+        commTotal = commTotal.toFixed(2);
+
+        var excludedReps = ['JOG SPORTS', 'Jog Sports', 'FREE', 'REMAKE', 'SAMPLE', 'CANCEL', ''];
+        if (sales2 !== '' && excludedReps.indexOf(sales2) === -1) {
+            // Two reps: populate then show the existing #Commission modal
+            openCommissionData(jogCode, sales1, sales2, year, per, per2, invno, invlnk, month, ordname, commTotal);
+            $('#Commission').modal('show');
+        } else {
+            // One rep: open the Sales Commission page directly in a new tab
+            var baseURL = '<?php echo Yii::app()->request->baseUrl; ?>';
+            var url = baseURL + '/calculator/SalesCommission/year/' + encodeURIComponent(year) +
+                      '/sales/' + encodeURIComponent(sales1) +
+                      '?invno=' + encodeURIComponent(invno) +
+                      '&per=' + encodeURIComponent(per) +
+                      '&jogcode=' + encodeURIComponent(jogCode) +
+                      '&invlnk=' + encodeURIComponent(invlnk) +
+                      '&ordnm=' + encodeURIComponent(ordname) +
+                      '&month=' + encodeURIComponent(month) +
+                      '&comm_total=' + encodeURIComponent(commTotal) +
+                      '&from_jog=1';
+            window.open(url, '_blank');
+        }
+    }
+
     function OrderCommentsDlt(id){    
         if (confirm('Are you sure you want to Delete ?')) {    
             $.ajax({

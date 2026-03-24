@@ -55,6 +55,11 @@
 		}
 	}
 
+	// If opened from JOG Code modal with specific checked items, use that sum
+	if (isset($_GET['comm_total']) && $_GET['comm_total'] !== '') {
+		$total = floatval($_GET['comm_total']);
+	}
+
 ?>
 <style>
 .datepicker-days,
@@ -158,7 +163,7 @@
 	<div class="form-group">	
 		<label class=" col-md-3 col-sm-3 col-xs-12"><?php echo $model->getAttributeLabel('invoice_amount_received'); ?></label>
 		<div class="col-md-9 col-sm-6 col-xs-12">
-			<?php echo $form->numberField($model, 'invoice_amount_received', array('class' => 'form-control numeric','step' => '0.01','value' => '0')); ?>
+			<?php echo $form->numberField($model, 'invoice_amount_received', array('class' => 'form-control numeric','step' => '0.01','value' => $total)); ?>
 		</div>
 	</div>
 
@@ -239,7 +244,14 @@
 			<?php echo $form->numberField($model, 'royalty_feecost', array('class' => 'form-control numeric', 'step' => '0.01', 'value' => '0')); ?>
 		</div>		
 	</div>
-
+	<?php if (isset($_GET['from_jog']) && $_GET['from_jog'] == '1'): ?>
+	<div class="form-group">
+		<label class=" col-md-3 col-sm-3 col-xs-12">Sales Tax</label>
+		<div class="col-md-3 col-sm-3 col-xs-12">
+			<?php echo $form->numberField($model, 'sales_tax', array('class' => 'form-control numeric','step' => '0.01','value' => '0')); ?>
+		</div>
+	</div>
+	<?php endif; ?>
 	<!-- <div class="form-group group-header">
 		<div class="col-md-12">
 			<h2>Commissions Payment  </h2>
