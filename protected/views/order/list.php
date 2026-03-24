@@ -4559,7 +4559,7 @@ echo phpversion();
                 nonShippingTotal += amt;
             }
         });
-        var per  = nonShippingTotal > 0 ? (weightedPer / nonShippingTotal).toFixed(2) : '0';
+        var per  = nonShippingTotal > 0 ? String(Math.round(weightedPer / nonShippingTotal)) : '0';
         var per2 = per;
         commTotal = commTotal.toFixed(2);
 
