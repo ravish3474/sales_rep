@@ -656,17 +656,28 @@ class OrderController extends AuthController
                     $link_ary = explode(',', $order['Invlink']);
                     $htmlinv = '';
                     $totalarray = count($link_ary);
+
+                    // Determine link color from QB payment status
+                    $payStatus = isset($order['payment_status']) ? $order['payment_status'] : 'unpaid';
+                    if ($payStatus === 'paid') {
+                        $invColor = 'color:#28a745;font-weight:600;'; // green
+                    } elseif ($payStatus === 'partial') {
+                        $invColor = 'color:#fd7e14;font-weight:600;'; // orange
+                    } else {
+                        $invColor = ''; // unpaid — no change
+                    }
+
                     if (!empty($order['Invlink'])) {
                         foreach ($inv_ary as $index => $inv_no) {
                             if (isset($link_ary[$index])) {
-                                $htmlinv .= "<a href='" . trim($link_ary[$index]) . "' target='_blank'><u>" . trim($inv_no) . "</u></a><br>";
+                                $htmlinv .= "<a href='" . trim($link_ary[$index]) . "' target='_blank' style='" . $invColor . "'><u>" . trim($inv_no) . "</u></a><br>";
                             } else {
-                                $htmlinv .= "<span>" . trim($inv_no) . "</span><br>";
+                                $htmlinv .= "<span style='" . $invColor . "'>" . trim($inv_no) . "</span><br>";
                             }
                         }
                     } else {
                         foreach ($inv_ary as $index => $inv_no) {
-                            $htmlinv .= "<span>" . trim($inv_no) . "</span><br>";
+                            $htmlinv .= "<span style='" . $invColor . "'>" . trim($inv_no) . "</span><br>";
                         }
                     }
                 } else {

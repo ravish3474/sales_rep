@@ -251,6 +251,16 @@ return array(
     // using Yii::app()->params['paramName']
     'params' => array(
         // this is used in contact page
-        'adminEmail' => 'webmaster@example.com',
+        'adminEmail' => 'deepak@jogdigitalinnovations.com',
+
+        // ---------------------------------------------------------------
+        // QuickBooks OAuth2 + Webhooks configuration
+        // Fill these in from your Intuit Developer app dashboard.
+        // ---------------------------------------------------------------
+        'QB_CLIENT_ID'              => 'ABVRht0ENDuIRKuBPe6kbK0bmQCHaZSVFdqf9DFmrf1heOIx3C',
+        'QB_CLIENT_SECRET'          => 'uqFZjZghbajdCDErrsXcsSHIMGhr1gIQ8Nc5Bwwq',
+        'QB_WEBHOOK_VERIFIER_TOKEN' => 'c0f44127-994c-47e7-a065-cf0c6e4d0814',   // Webhook verifier token (from QB dashboard)
+        'QB_REALM_ID'               => '9130357808208326',   // QuickBooks Company ID (realm ID)
+        'QB_BASE_URL'               => 'sandbox',  // 'sandbox' or 'production'
     ),
 );
