@@ -10,7 +10,9 @@
 	$shipping = 0;
 	$grand_total = 0;
 	$total = 0;
-	$feeprice= 0;
+	$credit_card= 0;
+	$royality = 0;
+	$namebar_patches = 0;
 	$date = date('Y-m-d');
 	$year = $_GET['year'];
 
@@ -36,16 +38,20 @@
 			$tot = Yii::app()->db->createCommand($sql)->queryAll();
 			$grand_total = $tot[0]['grand_total'];
 
-			$sql = "SELECT * FROM `tbl_quote_item` WHERE `qdoc_id` = '$qdoci_id' AND `pro_name` LIKE '%Shipping%'";
-			$shipp = Yii::app()->db->createCommand($sql)->queryAll();
-			$shipping = $shipp[0]['uprice'];	
+			$sql = "SELECT `pro_name`, `uprice`, `qty` FROM `tbl_quote_item` WHERE `qdoc_id` = '$qdoci_id'";
+			$items = Yii::app()->db->createCommand($sql)->queryAll();
 
-
-			$sql = "SELECT *  FROM `tbl_quote_item` WHERE `qdoc_id` = '$qdoci_id' AND (`pro_name` LIKE '%Royalty%' OR `pro_name` LIKE '%Credit Card%')";
-			$free = Yii::app()->db->createCommand($sql)->queryAll();
-
-			if (isset($free[0])) {				
-				$feeprice = $free[0]['uprice'];
+			foreach ($items as $item) {
+				$pro_name_lower = strtolower($item['pro_name']);
+				if (stripos($pro_name_lower, 'shipping') !== false) {
+					$shipping = $item['uprice'];
+				} elseif (stripos($pro_name_lower, 'royalty') !== false) {
+					$royality = $item['uprice'] * $item['qty'];
+				} elseif (stripos($pro_name_lower, 'namebar') !== false && stripos($pro_name_lower, 'patches') !== false) {
+					$namebar_patches = $item['uprice'] * $item['qty'];
+				} elseif (stripos($pro_name_lower, 'credit card') !== false) {
+					$credit_card = $item['uprice'];
+				}
 			}
 			
 			$total = $grand_total; 
@@ -230,18 +236,18 @@
 		</div>
 		<label class=" col-md-3 col-sm-3 col-xs-12">Namebar / Patches</label>
 		<div class="col-md-3 col-sm-3 col-xs-12">
-			<?php echo $form->numberField($model, 'namebar_patches', array('class' => 'form-control numeric','step' => '0.01','value' => '0')); ?>
+			<?php echo $form->numberField($model, 'namebar_patches', array('class' => 'form-control numeric','step' => '0.01','value' => $namebar_patches)); ?>
 		</div>
 		
 	</div>	
 	<div class="form-group">
 		<label class=" col-md-3 col-sm-3 col-xs-12"><?php echo $model->getAttributeLabel('creditcard_feecost'); ?></label>
 		<div class="col-md-3 col-sm-3 col-xs-12">
-			<?php echo $form->numberField($model, 'creditcard_feecost', array('class' => 'form-control numeric','step' => '0.01','value' => $feeprice)); ?>
+			<?php echo $form->numberField($model, 'creditcard_feecost', array('class' => 'form-control numeric','step' => '0.01','value' => $credit_card)); ?>
 		</div>
 		<label class=" col-md-3 col-sm-3 col-xs-12"><?php echo $model->getAttributeLabel('royalty_feecost'); ?></label>
 		<div class="col-md-3 col-sm-3 col-xs-12">
-			<?php echo $form->numberField($model, 'royalty_feecost', array('class' => 'form-control numeric', 'step' => '0.01', 'value' => '0')); ?>
+			<?php echo $form->numberField($model, 'royalty_feecost', array('class' => 'form-control numeric', 'step' => '0.01', 'value' => $royality)); ?>
 		</div>		
 	</div>
 	<?php if (isset($_GET['from_jog']) && $_GET['from_jog'] == '1'): ?>
