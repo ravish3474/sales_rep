@@ -2632,6 +2632,35 @@ class OrderController extends AuthController
         }
     }
 
+    public function actionGetCommissionRate()
+    {
+        $salesRepName = isset($_POST['sales_rep_name']) ? trim($_POST['sales_rep_name']) : '';
+        $commissionRate = '';
+
+        if (!empty($salesRepName)) {
+            // Map display names (JOG/*) to actual fullnames stored in user table
+            $nameMap = array(
+                'JOG/KRISTY' => 'Kristy Whitcomb',
+                'JOG/TRENT'  => 'Trent Whitcomb',
+                'JOG/DAVE'   => 'Dave Kwant',
+                'JOG/JOHN'   => 'John',
+            );
+            $lookupName = isset($nameMap[$salesRepName]) ? $nameMap[$salesRepName] : $salesRepName;
+
+            $rate = Yii::app()->db->createCommand(
+                "SELECT commission_type FROM `user` WHERE `fullname` = :name AND `enable` = 1 LIMIT 1"
+            )->bindValue(':name', $lookupName, PDO::PARAM_STR)->queryScalar();
+
+            if ($rate !== false && $rate !== null && $rate !== '') {
+                $commissionRate = $rate;
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(array('commission_type' => $commissionRate));
+        Yii::app()->end();
+    }
+
     public function sendNotification($to_employee_id, $title, $full_name, $doc_id)
     {
         $sql = "SELECT * FROM `user_tokens` WHERE user_id='$to_employee_id'";

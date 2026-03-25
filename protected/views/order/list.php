@@ -3572,30 +3572,48 @@ echo phpversion();
                 },
                 success: function(response) {
                     // Handle success response if needed
-
-                    if (selectedSalesRep != "Carolyn Kwant" && selectedSalesRep != "Jog Sports" && selectedSalesRep != "REMAKE" && selectedSalesRep != "SAMPLE" && selectedSalesRep != "CANCEL" && selectedSalesRep != "FREE") {
-                        var parentTr = dropdown.closest('tr');
-
-                        // Toggle visibility based on selectedSalesRep
-                        if (selectedSalesRep != "Carolyn Kwant" && selectedSalesRep != "Jog Sports" && selectedSalesRep != "REMAKE" && selectedSalesRep != "SAMPLE" && selectedSalesRep != "CANCEL" && selectedSalesRep != "FREE") {
-                            parentTr.find('.commdiv').removeClass("hidden");
-                            parentTr.find('.commcar').addClass("hidden");
-                        } else {
-                            parentTr.find('.commdiv').addClass("hidden");
-                            parentTr.find('.commcar').removeClass("hidden");
-                        }
+                    var parentTr = dropdown.closest('tr');
+                    var nonCommReps = ["Carolyn Kwant", "Jog Sports", "REMAKE", "SAMPLE", "CANCEL", "FREE"];
+                    if (nonCommReps.indexOf(selectedSalesRep) === -1) {
+                        parentTr.find('.commdiv').removeClass("hidden");
+                        parentTr.find('.commcar').addClass("hidden");
                     } else {
-                        var parentTr = dropdown.closest('tr');
-
-                        // Toggle visibility based on selectedSalesRep
-                        if (selectedSalesRep != "Carolyn Kwant" && selectedSalesRep != "Jog Sports" && selectedSalesRep != "REMAKE" && selectedSalesRep != "SAMPLE" && selectedSalesRep != "CANCEL" && selectedSalesRep != "FREE") {
-                            parentTr.find('.commdiv').removeClass("hidden");
-                            parentTr.find('.commcar').addClass("hidden");
-                        } else {
-                            parentTr.find('.commdiv').addClass("hidden");
-                            parentTr.find('.commcar').removeClass("hidden");
-                        }
+                        parentTr.find('.commdiv').addClass("hidden");
+                        parentTr.find('.commcar').removeClass("hidden");
                     }
+
+                    // Fetch and auto-populate the commission % for the selected sales rep
+                    var percentField = (salesRepClass === 'sales_rep_1') ? 'percentage_1' : 'percentage_2';
+                    var percentSpan = dropdown.closest('td').next('td').find('.editable');
+
+                    $.ajax({
+                        type: 'POST',
+                        url: 'GetCommissionRate',
+                        data: { sales_rep_name: selectedSalesRep },
+                        success: function(rateResponse) {
+                            try {
+                                var rateData = (typeof rateResponse === 'string') ? JSON.parse(rateResponse) : rateResponse;
+                                var commRate = rateData.commission_type;
+                                // Default to 0 if not found or empty
+                                if (commRate === null || commRate === undefined || commRate === '') {
+                                    commRate = 0;
+                                }
+                                // Update the % span in the UI
+                                percentSpan.text(commRate);
+                                // Persist the commission rate to the database
+                                $.ajax({
+                                    type: 'POST',
+                                    url: 'UpdatList',
+                                    data: { field: percentField, value: commRate, orderid: orderid }
+                                });
+                            } catch(e) {
+                                console.error('Error parsing commission rate response', e);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Failed to fetch commission rate', xhr.responseText);
+                        }
+                    });
                 },
                 error: function(xhr, status, error) {
                     // Handle errors if any
