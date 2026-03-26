@@ -29,137 +29,21 @@ class QuickbooksWebhookController extends Controller
     {
         return array(
             array('allow', 'actions' => array('receive'), 'users' => array('*')),
-            array('allow', 'actions' => array('connect', 'callback', 'test'), 'users' => array('@')),
+            array('allow', 'actions' => array('connect', 'callback'), 'users' => array('@')),
             array('deny'),
         );
     }
 
-    // -----------------------------------------------------------------------
-    // actionTest — TEMPORARY: manually trigger invoice processing (remove in production)
-    // Usage: /quickbooksWebhook/test?inv_id=<QB invoice ID>
-    // -----------------------------------------------------------------------
-
-    public function actionTest()
+    /**
+     * Disable Yii CSRF validation for the `receive` action so that QuickBooks
+     * can POST to the webhook endpoint without a CSRF token.
+     */
+    public function beforeAction($action)
     {
-        $realmId = Yii::app()->params['QB_REALM_ID'];
-        if (empty($realmId)) {
-            echo '<p style="color:red">QB_REALM_ID is not set in params.</p>';
-            return;
+        if ($action->id === 'receive') {
+            Yii::app()->request->enableCsrfValidation = false;
         }
-
-        $qbInvoiceId = isset($_GET['inv_id']) ? trim($_GET['inv_id']) : '';
-
-        // No inv_id supplied — list active invoices so the user can pick one
-        if (empty($qbInvoiceId)) {
-            $token = $this->_getValidToken($realmId);
-            if ($token === null) {
-                echo '<p style="color:red">No valid token. Visit /quickbooksWebhook/connect first.</p>';
-                return;
-            }
-            $params  = Yii::app()->params;
-            $base    = $params['QB_BASE_URL'] === 'production'
-                ? 'https://quickbooks.api.intuit.com'
-                : 'https://sandbox-quickbooks.api.intuit.com';
-            $url     = "$base/v3/company/$realmId/query?query="
-                . urlencode("SELECT Id, DocNumber, TotalAmt, Balance FROM Invoice MAXRESULTS 20")
-                . "&minorversion=65";
-            $resp    = $this->_curlGet($url, $token->access_token);
-            $json    = $resp ? json_decode($resp, true) : null;
-            $invoices = isset($json['QueryResponse']['Invoice']) ? $json['QueryResponse']['Invoice'] : array();
-
-            echo '<h3>Active Invoices in QB Sandbox (pick an Id to test)</h3>';
-            if (empty($invoices)) {
-                echo '<p style="color:orange">No active invoices found. Raw response: <pre>'
-                    . htmlspecialchars($resp) . '</pre></p>';
-                return;
-            }
-            echo '<table border="1" cellpadding="4" style="border-collapse:collapse">'
-                . '<tr><th>QB Id</th><th>DocNumber</th><th>TotalAmt</th><th>Balance</th><th>Test link</th></tr>';
-            foreach ($invoices as $inv) {
-                $id  = htmlspecialchars($inv['Id']);
-                $doc = htmlspecialchars(isset($inv['DocNumber']) ? $inv['DocNumber'] : '');
-                $tot = htmlspecialchars(isset($inv['TotalAmt']) ? $inv['TotalAmt'] : '');
-                $bal = htmlspecialchars(isset($inv['Balance'])  ? $inv['Balance']  : '');
-                $url = '?inv_id=' . $inv['Id'];
-                echo "<tr><td>$id</td><td>$doc</td><td>$tot</td><td>$bal</td>"
-                    . "<td><a href='$url'>Test this</a></td></tr>";
-            }
-            echo '</table>';
-            return;
-        }
-
-        if (!ctype_digit($qbInvoiceId)) {
-            echo '<p style="color:red">inv_id must be numeric.</p>';
-            return;
-        }
-
-        echo "<p>Processing QB invoice ID <strong>$qbInvoiceId</strong> for realm <strong>$realmId</strong>...</p>";
-
-        $token = $this->_getValidToken($realmId);
-        if ($token === null) {
-            echo '<p style="color:red">No valid token found. Please visit /quickbooksWebhook/connect first.</p>';
-            return;
-        }
-
-        $params  = Yii::app()->params;
-        $baseUrl = $params['QB_BASE_URL'] === 'production'
-            ? 'https://quickbooks.api.intuit.com'
-            : 'https://sandbox-quickbooks.api.intuit.com';
-
-        $url      = "$baseUrl/v3/company/$realmId/invoice/$qbInvoiceId?minorversion=65";
-        $response = $this->_curlGet($url, $token->access_token);
-
-        if ($response === false) {
-            echo '<p style="color:red">QB API call failed. Check Yii logs.</p>';
-            return;
-        }
-
-        $data = json_decode($response, true);
-        if (empty($data['Invoice'])) {
-            echo '<p style="color:red">QB response did not contain an Invoice. Raw response:</p><pre>'
-                . htmlspecialchars($response) . '</pre>';
-            return;
-        }
-
-        $invoice   = $data['Invoice'];
-        $docNumber = isset($invoice['DocNumber']) ? trim($invoice['DocNumber']) : '(none)';
-        $balance   = isset($invoice['Balance'])   ? (float)$invoice['Balance']   : 0.0;
-        $totalAmt  = isset($invoice['TotalAmt'])  ? (float)$invoice['TotalAmt']  : 0.0;
-
-        if ($balance <= 0) {
-            $paymentStatus = 'paid';
-        } elseif ($balance < $totalAmt) {
-            $paymentStatus = 'partial';
-        } else {
-            $paymentStatus = 'unpaid';
-        }
-
-        echo "<p>Invoice found: DocNumber=<strong>$docNumber</strong>, "
-            . "TotalAmt=<strong>$totalAmt</strong>, Balance=<strong>$balance</strong> "
-            . "→ status=<strong style='color:" . ($paymentStatus === 'paid' ? 'green' : ($paymentStatus === 'partial' ? 'orange' : 'red')) . "'>$paymentStatus</strong></p>";
-
-        $this->_updateOrderPaymentStatus($docNumber, $paymentStatus, (string)$qbInvoiceId);
-
-        // Check if any rows were actually updated
-        $db   = Yii::app()->db;
-        $safe = $db->quoteValue($docNumber);
-        $rows = $db->createCommand(
-            "SELECT id, Inv_no, payment_status FROM tbl_order
-              WHERE FIND_IN_SET($safe, REPLACE(`Inv_no`, ' ', '')) > 0"
-        )->queryAll();
-
-        if (empty($rows)) {
-            echo "<p style='color:orange'>No rows in tbl_order matched DocNumber <strong>$docNumber</strong>. "
-                . "Check that Inv_no contains this value.</p>";
-        } else {
-            echo '<p style="color:green">Updated ' . count($rows) . ' order row(s):</p><ul>';
-            foreach ($rows as $row) {
-                echo '<li>Order ID ' . htmlspecialchars($row['id'])
-                    . ' | Inv_no: ' . htmlspecialchars($row['Inv_no'])
-                    . ' | payment_status: <strong>' . htmlspecialchars($row['payment_status']) . '</strong></li>';
-            }
-            echo '</ul>';
-        }
+        return parent::beforeAction($action);
     }
 
     // -----------------------------------------------------------------------
@@ -266,48 +150,42 @@ class QuickbooksWebhookController extends Controller
 
     public function actionReceive()
     {
-        // Only accept POST
         if (!Yii::app()->request->isPostRequest) {
             header('HTTP/1.1 405 Method Not Allowed');
             Yii::app()->end();
         }
 
-        $rawBody  = file_get_contents('php://input');
-        $signature = isset($_SERVER['HTTP_INTUIT_SIGNATURE'])
-            ? $_SERVER['HTTP_INTUIT_SIGNATURE']
-            : '';
+        $rawBody   = file_get_contents('php://input');
+        $signature = isset($_SERVER['HTTP_INTUIT_SIGNATURE']) ? $_SERVER['HTTP_INTUIT_SIGNATURE'] : '';
 
-        // 1. Verify HMAC-SHA256 signature
         if (!$this->_verifySignature($rawBody, $signature)) {
-            Yii::log('QB webhook signature mismatch.', CLogger::LEVEL_WARNING, 'quickbooks');
+            Yii::log('QB webhook: signature verification failed.', CLogger::LEVEL_WARNING, 'quickbooks');
             header('HTTP/1.1 401 Unauthorized');
             Yii::app()->end();
         }
 
         $payload = json_decode($rawBody, true);
         if (empty($payload['eventNotifications'])) {
-            // QB sends an empty verification POST on setup — respond 200 OK
+            // QB sends a verification POST on setup with no notifications — respond 200 OK
             header('HTTP/1.1 200 OK');
             Yii::app()->end();
         }
 
-        // 2. Process each notification
         foreach ($payload['eventNotifications'] as $notification) {
-            $realmId = isset($notification['realmId']) ? $notification['realmId'] : '';
-            if (empty($realmId)) {
-                continue;
-            }
-
+            $realmId  = isset($notification['realmId']) ? $notification['realmId'] : '';
             $entities = isset($notification['dataChangeEvent']['entities'])
                 ? $notification['dataChangeEvent']['entities']
                 : array();
 
             foreach ($entities as $entity) {
-                if ($entity['name'] !== 'Invoice') {
-                    continue;
+                $name = isset($entity['name']) ? $entity['name'] : '';
+                $id   = isset($entity['id'])   ? $entity['id']   : '';
+
+                if ($name === 'Invoice') {
+                    $this->_processInvoice($realmId, $id);
+                } elseif ($name === 'Payment') {
+                    $this->_processPayment($realmId, $id);
                 }
-                $qbInvoiceId = $entity['id'];
-                $this->_processInvoice($realmId, $qbInvoiceId);
             }
         }
 
@@ -320,50 +198,78 @@ class QuickbooksWebhookController extends Controller
     // -----------------------------------------------------------------------
 
     /**
+     * Handle a QB Payment entity event.
+     * Fetches the QB Payment record, extracts all linked Invoice IDs,
+     * then calls _processInvoice() for each so their payment_status is updated.
+     */
+    private function _processPayment($realmId, $qbPaymentId)
+    {
+        $token = $this->_getValidToken($realmId);
+        if ($token === null) {
+            Yii::log("QB: no valid token for realmId=$realmId", CLogger::LEVEL_ERROR, 'quickbooks');
+            return;
+        }
+
+        $baseUrl  = $this->_apiBase();
+        $response = $this->_curlGet("$baseUrl/v3/company/$realmId/payment/$qbPaymentId?minorversion=65", $token->access_token);
+        if ($response === false) {
+            Yii::log("QB: API call failed for payment $qbPaymentId", CLogger::LEVEL_ERROR, 'quickbooks');
+            return;
+        }
+
+        $data = json_decode($response, true);
+        if (empty($data['Payment'])) {
+            Yii::log("QB: no Payment key in response for $qbPaymentId: $response", CLogger::LEVEL_WARNING, 'quickbooks');
+            return;
+        }
+
+        $linkedInvoiceIds = array();
+        foreach ((array)$data['Payment']['Line'] as $line) {
+            foreach ((array)(isset($line['LinkedTxn']) ? $line['LinkedTxn'] : array()) as $txn) {
+                if (isset($txn['TxnType']) && $txn['TxnType'] === 'Invoice' && !empty($txn['TxnId'])) {
+                    $linkedInvoiceIds[] = $txn['TxnId'];
+                }
+            }
+        }
+
+        foreach (array_unique($linkedInvoiceIds) as $invId) {
+            $this->_processInvoice($realmId, $invId);
+        }
+    }
+
+    /**
      * Fetch QB invoice details, determine payment status, update tbl_order.
      */
     private function _processInvoice($realmId, $qbInvoiceId)
     {
-        // Ensure we have a valid access token
         $token = $this->_getValidToken($realmId);
         if ($token === null) {
-            Yii::log(
-                "QB webhook: no valid token for realmId=$realmId, skipping invoice $qbInvoiceId",
-                CLogger::LEVEL_WARNING, 'quickbooks'
-            );
+            Yii::log("QB: no valid token for realmId=$realmId, skipping invoice $qbInvoiceId", CLogger::LEVEL_ERROR, 'quickbooks');
             return;
         }
 
-        // Fetch the invoice from QB API
-        $params  = Yii::app()->params;
-        $baseUrl = $params['QB_BASE_URL'] === 'production'
-            ? 'https://quickbooks.api.intuit.com'
-            : 'https://sandbox-quickbooks.api.intuit.com';
-
-        $url      = "$baseUrl/v3/company/$realmId/invoice/$qbInvoiceId?minorversion=65";
-        $response = $this->_curlGet($url, $token->access_token);
-
+        $baseUrl  = $this->_apiBase();
+        $response = $this->_curlGet("$baseUrl/v3/company/$realmId/invoice/$qbInvoiceId?minorversion=65", $token->access_token);
         if ($response === false) {
-            Yii::log("QB API call failed for invoice $qbInvoiceId", CLogger::LEVEL_ERROR, 'quickbooks');
+            Yii::log("QB: API call failed for invoice $qbInvoiceId", CLogger::LEVEL_ERROR, 'quickbooks');
             return;
         }
 
         $data = json_decode($response, true);
         if (empty($data['Invoice'])) {
-            Yii::log("QB invoice response missing Invoice key: $response", CLogger::LEVEL_WARNING, 'quickbooks');
+            Yii::log("QB: no Invoice key in response for $qbInvoiceId: $response", CLogger::LEVEL_WARNING, 'quickbooks');
             return;
         }
 
-        $invoice  = $data['Invoice'];
+        $invoice   = $data['Invoice'];
         $docNumber = isset($invoice['DocNumber']) ? trim($invoice['DocNumber']) : '';
-        $balance   = isset($invoice['Balance'])   ? (float)$invoice['Balance']   : 0.0;
-        $totalAmt  = isset($invoice['TotalAmt'])  ? (float)$invoice['TotalAmt']  : 0.0;
+        $balance   = isset($invoice['Balance'])   ? (float)$invoice['Balance']  : 0.0;
+        $totalAmt  = isset($invoice['TotalAmt'])  ? (float)$invoice['TotalAmt'] : 0.0;
 
         if (empty($docNumber)) {
             return;
         }
 
-        // Map QB balances to our three statuses
         if ($balance <= 0) {
             $paymentStatus = 'paid';
         } elseif ($balance < $totalAmt) {
@@ -372,14 +278,8 @@ class QuickbooksWebhookController extends Controller
             $paymentStatus = 'unpaid';
         }
 
-        // Update every tbl_order row whose Inv_no contains this DocNumber.
-        // We split the CSV, trim each part, and match exactly to avoid false positives.
         $this->_updateOrderPaymentStatus($docNumber, $paymentStatus, (string)$qbInvoiceId);
-
-        Yii::log(
-            "QB invoice $docNumber (id=$qbInvoiceId) → status=$paymentStatus",
-            CLogger::LEVEL_INFO, 'quickbooks'
-        );
+        Yii::log("QB: invoice $docNumber (id=$qbInvoiceId) → $paymentStatus", CLogger::LEVEL_INFO, 'quickbooks');
     }
 
     /**
@@ -389,32 +289,27 @@ class QuickbooksWebhookController extends Controller
      */
     private function _updateOrderPaymentStatus($docNumber, $paymentStatus, $qbPaymentId)
     {
-        $db = Yii::app()->db;
-
-        // Allowed values — whitelist to prevent injection via webhook data
         $allowedStatuses = array('paid', 'partial', 'unpaid');
         if (!in_array($paymentStatus, $allowedStatuses, true)) {
             return;
         }
 
-        // Sanitise docNumber — allow only alphanumeric, dash, space
         if (!preg_match('/^[\w\s\-]+$/', $docNumber)) {
-            Yii::log("QB webhook: invalid DocNumber format: $docNumber", CLogger::LEVEL_WARNING, 'quickbooks');
+            Yii::log("QB: invalid DocNumber format: $docNumber", CLogger::LEVEL_WARNING, 'quickbooks');
             return;
         }
 
-        $docNumber    = $db->quoteValue($docNumber);
-        $statusVal    = $db->quoteValue($paymentStatus);
-        $qbIdVal      = $db->quoteValue($qbPaymentId);
+        $db        = Yii::app()->db;
+        $docVal    = $db->quoteValue($docNumber);
+        $statusVal = $db->quoteValue($paymentStatus);
+        $qbIdVal   = $db->quoteValue($qbPaymentId);
 
-        // FIND_IN_SET works on comma-separated values but is space-sensitive.
-        // We cover both "INV-001" and " INV-001" by checking with and without leading space.
-        $sql = "UPDATE `tbl_order`
-                SET `payment_status` = $statusVal,
-                    `qb_payment_id`  = $qbIdVal
-                WHERE FIND_IN_SET($docNumber, REPLACE(`Inv_no`, ' ', '')) > 0";
-
-        $db->createCommand($sql)->execute();
+        $db->createCommand(
+            "UPDATE `tbl_order`
+             SET `payment_status` = $statusVal,
+                 `qb_payment_id`  = $qbIdVal
+             WHERE FIND_IN_SET($docVal, REPLACE(`Inv_no`, ' ', '')) > 0"
+        )->execute();
     }
 
     /**
@@ -429,12 +324,17 @@ class QuickbooksWebhookController extends Controller
         if ($token === null) {
             return null;
         }
-
         if (!$token->isAccessTokenValid()) {
             $token = $this->_refreshAccessToken($token);
         }
-
         return $token;
+    }
+
+    private function _apiBase()
+    {
+        return Yii::app()->params['QB_BASE_URL'] === 'production'
+            ? 'https://quickbooks.api.intuit.com'
+            : 'https://sandbox-quickbooks.api.intuit.com';
     }
 
     /**

@@ -656,35 +656,36 @@ class OrderController extends AuthController
                     $htmlinv = '';
                     $totalarray = count($link_ary);
 
-                    // QB payment status color coding
+                    // QB payment status â border on the TD
                     $payStatus = isset($order['payment_status']) ? $order['payment_status'] : 'unpaid';
                     if ($payStatus === 'paid') {
-                        $invColor = 'color:#28a745;font-weight:600;';
+                        $invTdBorder = 'border:2px solid #28a745;';
                     } elseif ($payStatus === 'partial') {
-                        $invColor = 'color:#fd7e14;font-weight:600;';
+                        $invTdBorder = 'border:2px solid #fd7e14;';
                     } else {
-                        $invColor = '';
+                        $invTdBorder = '';
                     }
 
                     if (!empty($order['Invlink'])) {
                         foreach ($inv_ary as $index => $inv_no) {
                             if (isset($link_ary[$index])) {
-                                $htmlinv .= "<a href='" . trim($link_ary[$index]) . "' target='_blank' style='" . $invColor . "'><u>" . trim($inv_no) . "</u></a><br>";
+                                $htmlinv .= "<a href='" . trim($link_ary[$index]) . "' target='_blank'><u>" . trim($inv_no) . "</u></a><br>";
                             } else {
-                                $htmlinv .= "<span style='" . $invColor . "'>" . trim($inv_no) . "</span><br>";
+                                $htmlinv .= "<span>" . trim($inv_no) . "</span><br>";
                             }
                         }
                     } else {
                         foreach ($inv_ary as $index => $inv_no) {
-                            $htmlinv .= "<span style='" . $invColor . "'>" . trim($inv_no) . "</span><br>";
+                            $htmlinv .= "<span>" . trim($inv_no) . "</span><br>";
                         }
                     }
                 } else {
                     $htmlinv = $inv_tital;
+                    $invTdBorder = '';
                 }
 
                 $invLink = "<td data-col='5' " . ($user_group == '1' || $user_group == '99' ? "class='invlink'" : "") . " style='position: relative;'>
-                    <div class='invlink'>
+                    <div class='invlink' data-paystatus='" . $payStatus . "'>
                     <span class='invtital" . $order['id'] . "'>" . ($order['Inv_no'] != '' ? "$htmlinv" : $inv_tital) . "</span>
                     " . ($user_group == '1' || $user_group == '99' ? "<span class='edit-icon' id='invlinkatt" . $order['id'] . "' data-toggle='modal' data-target='#invlink" . $order['id'] . "' onclick=\"invcpopup('" . $order['id'] . "', '" . $cleanInvNo . "', '" . $order['Invlink'] . "')\" style='position: absolute; top: 50%; transform: translateY(-50%); right: 5px; cursor: pointer;display:none'>
                         <i class='fa fa-pencil'></i>
