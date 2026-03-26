@@ -1238,7 +1238,8 @@ class OrderController extends AuthController
 
         $ordname = $_POST['ordname'];
         $ordnm = urlencode($ordname);
-
+        $comm_total = isset($_POST['comm_total']) ? floatval($_POST['comm_total']) : 0;
+                
         // Perform database query or any other logic
         $salescount1 = Yii::app()->db->createCommand()
             ->select('COUNT(*)')
@@ -1275,11 +1276,11 @@ class OrderController extends AuthController
         echo  "<div class='col-6'>                                
             <label> $sales1 </label>
 			
-                <a href='/calculator/SalesCommission/year/$years/sales/$sales1?invno=$invno&jogcode=$jogcode&per=$per&invlnk=$invlnk&ordnm=$ordnm&month=$month' class='btn $btnsales1'  target='_blanck'> $saletext1 </a>
+                <a href='/calculator/SalesCommission/year/$years/sales/$sales1?invno=$invno&jogcode=$jogcode&per=$per&invlnk=$invlnk&ordnm=$ordnm&month=$month&comm_total=$comm_total&from_jog=1' class='btn $btnsales1'  target='_blanck'> $saletext1 </a>
             </div>
             <div class='col-6'>            
                 <label> $sales2 </label>
-                <a href='/calculator/SalesCommission/year/$years/sales/$sales2?invno=$invno&jogcode=$jogcode&per=$per2&invlnk=$invlnk&ordnm=$ordnm&month=$month' class='btn $btnsales2' target='_blanck'> $saletext2 </a>
+                <a href='/calculator/SalesCommission/year/$years/sales/$sales2?invno=$invno&jogcode=$jogcode&per=$per2&invlnk=$invlnk&ordnm=$ordnm&month=$month&comm_total=$comm_total&from_jog=1' class='btn $btnsales2' target='_blanck'> $saletext2 </a>
             </div>";
     }
 
@@ -1514,7 +1515,12 @@ class OrderController extends AuthController
 
 					$return_html .= '<td style="text-align:center; color:#999;"><input type="hidden" value="' . $row_qitem["qdoci_id"] . '" class="qdoci_id_app">';
 					$return_html .= '<input type="hidden" value="' . $tmp_amount . '" id="tmp_amount' . $row_qitem["qdoci_id"] . '">';
-					$return_html .= '';
+					$return_html .= '<input type="hidden" value="' . htmlspecialchars($row_qitem["pro_name"]) . '" class="comm_pro_name" data-qdoci="' . $row_qitem["qdoci_id"] . '">';
+					$return_html .= '<input type="hidden" value="' . $tmp_comm_percent . '" class="comm_item_percent" data-qdoci="' . $row_qitem["qdoci_id"] . '">';
+					$is_shipping = (stripos($row_qitem["pro_name"], "shipping") !== false);
+					$is_excluded = ($is_shipping || stripos($row_qitem["pro_name"], "royalty") !== false || stripos($row_qitem["pro_name"], "credit card") !== false || stripos($row_qitem["pro_name"], "namebar") !== false || stripos($row_qitem["pro_name"], "patches") !== false);
+					$checked_attr = $is_excluded ? '' : ' checked';
+					$return_html .= '<div style="margin-bottom:4px;"><input type="checkbox" class="comm_item_checkbox" data-qdoci="' . $row_qitem["qdoci_id"] . '" data-amount="' . $tmp_amount . '" data-proname="' . htmlspecialchars($row_qitem["pro_name"]) . '" data-commpercent="' . $tmp_comm_percent . '" data-shipping="' . ($is_shipping ? '1' : '0') . '" value="1"' . $checked_attr . ' onchange="recalcCommTotal();"></div>';
 					$return_html .= '<spen id="split" class="splitform ' . $splitclass . '" onclick="return formsplit(' . $row_qitem["qdoci_id"] . ');"><i class="fa fa-exchange" aria-hidden="true"></i> Split </spen>
 					<div class="formsplit" id="formsplite' . $row_qitem["qdoci_id"] . '" style="display:none;">
 						<form class="form__submit" action="form.php" method="post">
@@ -1731,6 +1737,30 @@ class OrderController extends AuthController
         $return_html .= '</td></tr>';
 
         $return_html .= '</table>';
+
+        // Hidden fields for commission processing
+        $return_html .= '<input type="hidden" id="quote_sales_name" value="' . htmlspecialchars($fullname_sales) . '">';
+        $return_html .= '<input type="hidden" id="quote_jog_code" value="' . htmlspecialchars($jog_code_main) . '">';
+        $return_html .= '<input type="hidden" id="quote_currency" value="' . htmlspecialchars($row_quote["quote_curr"]) . '">';
+        $return_html .= '<input type="hidden" id="quote_grand_total" value="' . $f_total . '">';
+        $return_html .= '<input type="hidden" id="quote_est_number" value="' . htmlspecialchars($row_quote["est_number"]) . '">';
+        $return_html .= '<input type="hidden" id="quote_qdoc_id" value="' . $qdoc_id . '">';
+
+        // Extra hidden fields from tbl_order for the commission page URL
+        $sql_ord = "SELECT `year`, `month`, `Inv_no`, `Invlink`, `Order_Name`, `Percentage_1`, `Percentage_2`, `Sales_Rep_2`
+                    FROM `tbl_order`
+                    WHERE `JOG_Code` = '" . addslashes($jog_code_main) . "'
+                    LIMIT 1";
+        $a_ord = Yii::app()->db->createCommand($sql_ord)->queryAll();
+        $row_ord = !empty($a_ord) ? $a_ord[0] : array();
+        $return_html .= '<input type="hidden" id="quote_year" value="' . htmlspecialchars(isset($row_ord['year']) ? $row_ord['year'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_month" value="' . htmlspecialchars(isset($row_ord['month']) ? $row_ord['month'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_invno" value="' . htmlspecialchars(isset($row_ord['Inv_no']) ? $row_ord['Inv_no'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_invlnk" value="' . htmlspecialchars(isset($row_ord['Invlink']) ? $row_ord['Invlink'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_ordname" value="' . htmlspecialchars(isset($row_ord['Order_Name']) ? $row_ord['Order_Name'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_per" value="' . htmlspecialchars(isset($row_ord['Percentage_1']) ? $row_ord['Percentage_1'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_per2" value="' . htmlspecialchars(isset($row_ord['Percentage_2']) ? $row_ord['Percentage_2'] : '') . '">';
+        $return_html .= '<input type="hidden" id="quote_sales2" value="' . htmlspecialchars(isset($row_ord['Sales_Rep_2']) ? $row_ord['Sales_Rep_2'] : '') . '">';
 
         if ($action_from != "va" && $row_quote["note"] != "") {
             $return_html .= '<b>Notes</b> ';
@@ -2600,6 +2630,35 @@ class OrderController extends AuthController
             echo json_encode($response);
             Yii::app()->end();
         }
+    }
+
+    public function actionGetCommissionRate()
+    {
+        $salesRepName = isset($_POST['sales_rep_name']) ? trim($_POST['sales_rep_name']) : '';
+        $commissionRate = '';
+
+        if (!empty($salesRepName)) {
+            // Map display names (JOG/*) to actual fullnames stored in user table
+            $nameMap = array(
+                'JOG/KRISTY' => 'Kristy Whitcomb',
+                'JOG/TRENT'  => 'Trent Whitcomb',
+                'JOG/DAVE'   => 'Dave Kwant',
+                'JOG/JOHN'   => 'John',
+            );
+            $lookupName = isset($nameMap[$salesRepName]) ? $nameMap[$salesRepName] : $salesRepName;
+
+            $rate = Yii::app()->db->createCommand(
+                "SELECT commission_type FROM `user` WHERE `fullname` = :name AND `enable` = 1 LIMIT 1"
+            )->bindValue(':name', $lookupName, PDO::PARAM_STR)->queryScalar();
+
+            if ($rate !== false && $rate !== null && $rate !== '') {
+                $commissionRate = $rate;
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(array('commission_type' => $commissionRate));
+        Yii::app()->end();
     }
 
     public function sendNotification($to_employee_id, $title, $full_name, $doc_id)

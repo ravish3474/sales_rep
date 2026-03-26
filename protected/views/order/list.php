@@ -2874,6 +2874,8 @@ echo phpversion();
         $('#btn_print').hide();
         $('#btn_save').hide();
         $('#btn_refresh_date').hide();
+        $('#btn_comm_rep').hide();
+        $('#btn_comm_rep_2').hide();
         //$('#d_quote_below').hide();
         $('#sp_remark').hide();
         if (action_from != "va") {
@@ -2961,6 +2963,16 @@ echo phpversion();
                                 }
                             })
 
+                            // Show commission button after content loads
+                            var salesNameComm = $('#quote_sales_name').val();
+                            if (salesNameComm) {
+                                $('#btn_comm_rep_label').text(salesNameComm + "'s Comm");
+                                $('#btn_comm_rep_label_2').text(salesNameComm + "'s Comm");
+                                $('#btn_comm_rep').show();
+                                $('#btn_comm_rep_2').show();
+                            }
+                            recalcCommTotal();
+
                         }
                     });
 
@@ -3035,6 +3047,16 @@ echo phpversion();
                             }
                         }
                     })
+
+                    // Show commission button after content loads
+                    var salesNameComm2 = $('#quote_sales_name').val();
+                    if (salesNameComm2) {
+                        $('#btn_comm_rep_label').text(salesNameComm2 + "'s Comm");
+                        $('#btn_comm_rep_label_2').text(salesNameComm2 + "'s Comm");
+                        $('#btn_comm_rep').show();
+                        $('#btn_comm_rep_2').show();
+                    }
+                    recalcCommTotal();
 
                 }
             });
@@ -3191,8 +3213,7 @@ echo phpversion();
             var comm_val;
 
             if (tmp_amount < 800) {
-                // Amount under $800: show 0 for both Comm.% and Comm.
-                comm_percent_input.val(0);
+                // Amount under $800: show 0 for Comm. display only, do not reset the input
                 comm_val = 0;
             } else {
                 var comm_percent = comm_percent_input.val();
@@ -3551,30 +3572,48 @@ echo phpversion();
                 },
                 success: function(response) {
                     // Handle success response if needed
-
-                    if (selectedSalesRep != "Carolyn Kwant" && selectedSalesRep != "Jog Sports" && selectedSalesRep != "REMAKE" && selectedSalesRep != "SAMPLE" && selectedSalesRep != "CANCEL" && selectedSalesRep != "FREE") {
-                        var parentTr = dropdown.closest('tr');
-
-                        // Toggle visibility based on selectedSalesRep
-                        if (selectedSalesRep != "Carolyn Kwant" && selectedSalesRep != "Jog Sports" && selectedSalesRep != "REMAKE" && selectedSalesRep != "SAMPLE" && selectedSalesRep != "CANCEL" && selectedSalesRep != "FREE") {
-                            parentTr.find('.commdiv').removeClass("hidden");
-                            parentTr.find('.commcar').addClass("hidden");
-                        } else {
-                            parentTr.find('.commdiv').addClass("hidden");
-                            parentTr.find('.commcar').removeClass("hidden");
-                        }
+                    var parentTr = dropdown.closest('tr');
+                    var nonCommReps = ["Carolyn Kwant", "Jog Sports", "REMAKE", "SAMPLE", "CANCEL", "FREE"];
+                    if (nonCommReps.indexOf(selectedSalesRep) === -1) {
+                        parentTr.find('.commdiv').removeClass("hidden");
+                        parentTr.find('.commcar').addClass("hidden");
                     } else {
-                        var parentTr = dropdown.closest('tr');
-
-                        // Toggle visibility based on selectedSalesRep
-                        if (selectedSalesRep != "Carolyn Kwant" && selectedSalesRep != "Jog Sports" && selectedSalesRep != "REMAKE" && selectedSalesRep != "SAMPLE" && selectedSalesRep != "CANCEL" && selectedSalesRep != "FREE") {
-                            parentTr.find('.commdiv').removeClass("hidden");
-                            parentTr.find('.commcar').addClass("hidden");
-                        } else {
-                            parentTr.find('.commdiv').addClass("hidden");
-                            parentTr.find('.commcar').removeClass("hidden");
-                        }
+                        parentTr.find('.commdiv').addClass("hidden");
+                        parentTr.find('.commcar').removeClass("hidden");
                     }
+
+                    // Fetch and auto-populate the commission % for the selected sales rep
+                    var percentField = (salesRepClass === 'sales_rep_1') ? 'percentage_1' : 'percentage_2';
+                    var percentSpan = dropdown.closest('td').next('td').find('.editable');
+
+                    $.ajax({
+                        type: 'POST',
+                        url: 'GetCommissionRate',
+                        data: { sales_rep_name: selectedSalesRep },
+                        success: function(rateResponse) {
+                            try {
+                                var rateData = (typeof rateResponse === 'string') ? JSON.parse(rateResponse) : rateResponse;
+                                var commRate = rateData.commission_type;
+                                // Default to 0 if not found or empty
+                                if (commRate === null || commRate === undefined || commRate === '') {
+                                    commRate = 0;
+                                }
+                                // Update the % span in the UI
+                                percentSpan.text(commRate);
+                                // Persist the commission rate to the database
+                                $.ajax({
+                                    type: 'POST',
+                                    url: 'UpdatList',
+                                    data: { field: percentField, value: commRate, orderid: orderid }
+                                });
+                            } catch(e) {
+                                console.error('Error parsing commission rate response', e);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Failed to fetch commission rate', xhr.responseText);
+                        }
+                    });
                 },
                 error: function(xhr, status, error) {
                     // Handle errors if any
@@ -4189,7 +4228,7 @@ echo phpversion();
         }
     }
 
-    function openCommissionData(jogcode, sales1, sales2, years, per, per2, invno, invlnk, month, ordname) {
+    function openCommissionData(jogcode, sales1, sales2, years, per, per2, invno, invlnk, month, ordname, commTotal) {
         var html = '';
 
         //$('#salesrapuserbtn').html('Online Store Report');
@@ -4208,6 +4247,7 @@ echo phpversion();
                 invlnk: invlnk,
                 month: month,
                 ordname: ordname,
+                comm_total: commTotal || 0,
 
             },
             success: function(response) {
@@ -4494,6 +4534,75 @@ echo phpversion();
             })
         }
     }
+
+    /**
+     * Update commission button label with sales rep name from the JOG Code modal.
+     */
+    function recalcCommTotal() {
+        var salesName = $('#quote_sales_name').val() || 'Comm';
+        var labelText = salesName + "'s Comm";
+        $('#btn_comm_rep_label').text(labelText);
+        $('#btn_comm_rep_label_2').text(labelText);
+    }
+
+    /**
+     * Open the existing Sales Commission Calculator via the standard flow.
+     * When there are two sales reps, opens the #Commission modal.
+     * When there is one sales rep, opens the calculator page directly in a new tab.
+     */
+    function openCommFromQuote() {
+        var jogCode  = $('#quote_jog_code').val() || '';
+        var sales1   = $('#quote_sales_name').val() || '';
+        var sales2   = $('#quote_sales2').val() || '';
+        var year     = $('#quote_year').val() || '';
+        var month    = $('#quote_month').val() || '';
+        var invno    = $('#quote_invno').val() || '';
+        var invlnk   = $('#quote_invlnk').val() || '';
+        var ordname  = $('#quote_ordname').val() || '';
+
+        if (!jogCode || !sales1) {
+            alert('Commission data not available for this estimate.');
+            return false;
+        }
+
+        // Sum amounts from checked items; commission % = max non-zero % among non-shipping items
+        var commTotal = 0, maxPer = 0;
+        $('.comm_item_checkbox:checked').each(function() {
+            var amt = parseFloat($(this).data('amount')) || 0;
+            commTotal += amt;
+            if ($(this).data('shipping') != '1') {
+                var qdoci = $(this).data('qdoci');
+                var liveInput = $('#comm_percent_app' + qdoci);
+                var itemPer = liveInput.length ? (parseFloat(liveInput.val()) || 0) : (parseFloat($(this).data('commpercent')) || 0);
+                if (itemPer > maxPer) { maxPer = itemPer; }
+            }
+        });
+        var per  = String(Math.round(maxPer));
+        var per2 = per;
+        commTotal = commTotal.toFixed(2);
+
+        var excludedReps = ['JOG SPORTS', 'Jog Sports', 'FREE', 'REMAKE', 'SAMPLE', 'CANCEL', ''];
+        if (sales2 !== '' && excludedReps.indexOf(sales2) === -1) {
+            // Two reps: populate then show the existing #Commission modal
+            openCommissionData(jogCode, sales1, sales2, year, per, per2, invno, invlnk, month, ordname, commTotal);
+            $('#Commission').modal('show');
+        } else {
+            // One rep: open the Sales Commission page directly in a new tab
+            var baseURL = '<?php echo Yii::app()->request->baseUrl; ?>';
+            var url = baseURL + '/calculator/SalesCommission/year/' + encodeURIComponent(year) +
+                      '/sales/' + encodeURIComponent(sales1) +
+                      '?invno=' + encodeURIComponent(invno) +
+                      '&per=' + encodeURIComponent(per) +
+                      '&jogcode=' + encodeURIComponent(jogCode) +
+                      '&invlnk=' + encodeURIComponent(invlnk) +
+                      '&ordnm=' + encodeURIComponent(ordname) +
+                      '&month=' + encodeURIComponent(month) +
+                      '&comm_total=' + encodeURIComponent(commTotal) +
+                      '&from_jog=1';
+            window.open(url, '_blank');
+        }
+    }
+
     function OrderCommentsDlt(id){    
         if (confirm('Are you sure you want to Delete ?')) {    
             $.ajax({
