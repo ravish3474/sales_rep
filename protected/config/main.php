@@ -252,5 +252,13 @@ return array(
     'params' => array(
         // this is used in contact page
         'adminEmail' => 'webmaster@example.com',
+
+        // QuickBooks OAuth2 + Webhooks configuration
+        // Fill in credentials from your Intuit Developer app dashboard.
+        'QB_CLIENT_ID'              => '',
+        'QB_CLIENT_SECRET'          => '',
+        'QB_WEBHOOK_VERIFIER_TOKEN' => '',
+        'QB_REALM_ID'               => '',
+        'QB_BASE_URL'               => 'sandbox',
     ),
 );
