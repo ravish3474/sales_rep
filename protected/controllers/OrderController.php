@@ -683,7 +683,11 @@ class OrderController extends AuthController
                     $htmlinv = $inv_tital;
                     $invTdBorder = '';
                 }
-
+                if($order['Inv_no'] != '' && !empty($order['Inv_no'])){
+                    $payStatus = isset($order['payment_status']) ? $order['payment_status'] : 'unpaid';
+                } else {
+                    $payStatus = 'unpaid';
+                }
                 if ($payStatus === 'paid') {
                     $payStatusLabel = "<span style='display:block;font-size:11px;color:#28a745;font-weight:600;'>Paid</span>";
                 } elseif ($payStatus === 'partial') {

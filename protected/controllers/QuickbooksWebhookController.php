@@ -307,7 +307,8 @@ class QuickbooksWebhookController extends Controller
         $db->createCommand(
             "UPDATE `tbl_order`
              SET `payment_status` = $statusVal,
-                 `qb_payment_id`  = $qbIdVal
+                 `qb_payment_id`  = $qbIdVal,
+                 `qb_payment_datetime`  = NOW()
              WHERE FIND_IN_SET($docVal, REPLACE(`Inv_no`, ' ', '')) > 0"
         )->execute();
     }
