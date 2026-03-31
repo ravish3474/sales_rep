@@ -655,6 +655,17 @@ class OrderController extends AuthController
                     $link_ary = explode(',', $order['Invlink']);
                     $htmlinv = '';
                     $totalarray = count($link_ary);
+
+                    // QB payment status â border on the TD
+                    $payStatus = isset($order['payment_status']) ? $order['payment_status'] : 'unpaid';
+                    if ($payStatus === 'paid') {
+                        $invTdBorder = 'border:2px solid #28a745;';
+                    } elseif ($payStatus === 'partial') {
+                        $invTdBorder = 'border:2px solid #fd7e14;';
+                    } else {
+                        $invTdBorder = '';
+                    }
+
                     if (!empty($order['Invlink'])) {
                         foreach ($inv_ary as $index => $inv_no) {
                             if (isset($link_ary[$index])) {
@@ -670,11 +681,25 @@ class OrderController extends AuthController
                     }
                 } else {
                     $htmlinv = $inv_tital;
+                    $invTdBorder = '';
+                }
+                if($order['Inv_no'] != '' && !empty($order['Inv_no'])){
+                    $payStatus = isset($order['payment_status']) ? $order['payment_status'] : 'unpaid';
+                } else {
+                    $payStatus = 'unpaid';
+                }
+                if ($payStatus === 'paid') {
+                    $payStatusLabel = "<span style='display:block;font-size:11px;color:#28a745;font-weight:600;'>Paid</span>";
+                } elseif ($payStatus === 'partial') {
+                    $payStatusLabel = "<span style='display:block;font-size:11px;color:#fd7e14;font-weight:600;'>Partially Paid</span>";
+                } else {
+                    $payStatusLabel = '';
                 }
 
                 $invLink = "<td data-col='5' " . ($user_group == '1' || $user_group == '99' ? "class='invlink'" : "") . " style='position: relative;'>
-                    <div class='invlink'>
+                    <div class='invlink' data-paystatus='" . $payStatus . "'>
                     <span class='invtital" . $order['id'] . "'>" . ($order['Inv_no'] != '' ? "$htmlinv" : $inv_tital) . "</span>
+                    $payStatusLabel
                     " . ($user_group == '1' || $user_group == '99' ? "<span class='edit-icon' id='invlinkatt" . $order['id'] . "' data-toggle='modal' data-target='#invlink" . $order['id'] . "' onclick=\"invcpopup('" . $order['id'] . "', '" . $cleanInvNo . "', '" . $order['Invlink'] . "')\" style='position: absolute; top: 50%; transform: translateY(-50%); right: 5px; cursor: pointer;display:none'>
                         <i class='fa fa-pencil'></i>
                     </span>" : "") . "

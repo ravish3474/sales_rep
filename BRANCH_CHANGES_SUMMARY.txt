@@ -1,0 +1,445 @@
+================================================================================
+  BRANCH CHANGES SUMMARY — sales_rep project
+  Generated: 26 March 2026
+  Purpose:   Reference for merging all branches into main
+================================================================================
+
+OVERVIEW OF ALL BRANCHES
+--------------------------
+  main                  ← current target / base
+  QBIntegration         ← 2 commits ahead of main  (UNIQUE feature set)
+  royality_auto_populate← 8 commits ahead of main  (SUPERSET of comm_auto_populate)
+  comm_auto_populate    ← 7 commits ahead of main  (SUPERSET of commission_cal)
+  commission_cal        ← 6 commits ahead of main  (subset of comm_auto_populate)
+  commission_change     ← 1 commit ahead of main   (DIFFERENT approach, see notes)
+  commission_calculation← 0 commits ahead of main  (already merged / empty)
+  commission_changes    ← 0 commits ahead of main  (already merged / empty)
+  new_changes           ← 0 commits ahead of main  (already merged / empty)
+
+================================================================================
+BRANCH: QBIntegration
+Commits vs main: 2
+  - ca09076  QB integration: OAuth2 + webhooks + invoice payment status coloring
+  - 597c1dc  feat: commission calculation flow via JOG Code click
+================================================================================
+
+FILES CHANGED
+  1. protected/config/main.php
+     + Added QB configuration params:
+         QB_CLIENT_ID, QB_CLIENT_SECRET, QB_WEBHOOK_VERIFIER_TOKEN,
+         QB_REALM_ID, QB_BASE_URL
+     + Changed adminEmail to deepak@jogdigitalinnovations.com
+
+  2. protected/controllers/QuickbooksWebhookController.php  [NEW FILE]
+     + Full QuickBooks OAuth2 + Webhooks controller
+     + actionConnect()   — Initiates OAuth2, redirects to Intuit consent page
+     + actionCallback()  — Exchanges auth code for tokens, stores in DB via QbToken
+     + actionReceive()   — Webhook POST endpoint; verifies HMAC-SHA256 signature,
+                           processes Invoice change notifications
+     + actionTest()      — Temp debug endpoint: lists/processes QB invoices manually
+     + _processInvoice() — Fetches QB invoice, maps Balance→payment_status, updates tbl_order
+     + _updateOrderPaymentStatus() — Updates tbl_order.payment_status + qb_payment_id
+                                     using FIND_IN_SET on Inv_no (CSV field)
+     + _getValidToken()  — Returns valid QbToken, auto-refreshes if expired
+     + _refreshAccessToken() — Calls QB token endpoint with refresh_token
+     + _verifySignature()    — HMAC-SHA256 verification of intuit-signature header
+     + _redirectUri()        — Builds OAuth2 redirect URI
+     + _curlPost() / _curlGet() — HTTP helpers with SSL verify, timeout, auth
+
+  3. protected/models/QbToken.php  [NEW FILE]
+     + ActiveRecord model for `qb_tokens` table
+     + Columns: id, realm_id, access_token, refresh_token, token_expiry
+     + static getToken($realmId)         — find by realm_id
+     + static saveToken($realmId, ...)   — insert or update token record
+     + isAccessTokenValid()              — checks expiry (60s buffer)
+
+  4. protected/models/Calculator.php
+     + Added 'sales_tax' to safe attributes list in rules()
+     + Added 'sales_tax' numerical validation rule
+     + Added 'Sales Tax' label in attributeLabels()
+
+  5. protected/controllers/CalculatorController.php
+     + Saves sales_tax field from POST when saving Calculator model
+
+  6. protected/controllers/OrderController.php
+     a) JOG Code cell — link now calls openCommissionData() instead of
+        viewQuotationFinal() when clicked (opens estimate in commission-select mode)
+        Also: explodes Invlink CSV to get first link for the JS call
+
+     b) Invoice link coloring — reads payment_status from tbl_order row:
+          paid    → green  (#28a745, bold)
+          partial → orange (#fd7e14, bold)
+          unpaid  → no style change
+        Applied to all <a> and <span> tags in the Inv_no column
+
+     c) Commission button (btncalculator) — modal target changed from
+        #Commission → #quoteDocModal for both single-rep and dual-rep paths
+
+     d) Product list heading — adds empty <th> checkbox column header when
+        action_from == "vc" AND user_group is 1 or 99
+
+     e) Product list rows — adds commission checkbox column when
+        action_from == "vc" AND user_group is 1 or 99.
+        Pre-checked for all items; unchecked for: Shipping, Credit Card,
+        CreditCard, Royalty, Namebar, Name Bar, Patch items
+        Checkbox: class="comm-item-checkbox", data-amount="<line total>"
+
+  7. protected/views/calculator/_CalculatorUploadEachSalesRep.php
+     + Pre-fill $total from $_GET['total_sales'] if numeric
+     + invoice_amount_received field default value changed from '0' to $total
+     + Added Sales Tax form field (always visible)
+     + Added JS block: syncs invoice_amount_received to total_sales on input/change
+
+  8. protected/views/layouts/top.php  (both modal instances updated)
+     + Added #btn_commission_row div inside #quote_approve_bar:
+         - #comm_total_label span (shows selected total)
+         - #btn_comm_1 button — Sales Rep 1 commission
+         - #btn_comm_2 button — Sales Rep 2 commission (hidden if no rep 2)
+
+  9. protected/views/order/list.php
+     + calComm() call after AJAX load replaced with:
+         if (_commData) _showCommissionButtons();
+     + Modal close handler (#quoteDocModal hidden.bs.modal):
+         resets _commData = null, hides #btn_commission_row
+     + calComm() logic change: removed $800 threshold that reset comm_percent_input;
+       now always calculates commission value
+     + Global var _commData = null — stores current commission context
+     + openCommissionData() rewritten:
+         - Stores commission context in _commData
+         - Calls viewQuotationFinal('', 'vc', jogcode, '') to load estimate with checkboxes
+     + NEW: _showCommissionButtons(jobcode, ...) function:
+         - Sums amounts from checked .comm-item-checkbox elements
+         - Shows/hides #btn_comm_1 and #btn_comm_2 with rep names
+         - Updates #comm_total_label
+         - Hides #btn_print
+     + NEW: gotoCommission(repNum) function:
+         - Reads _commData, sums checked items
+         - Opens SalesCommission page in new tab with total_sales param
+     + Event: $(document).on('change', '.comm-item-checkbox') → _showCommissionButtons()
+
+WHAT TO KEEP IN MAIN:
+  ✓ QuickbooksWebhookController.php (entire new file)
+  ✓ QbToken.php model (entire new file)
+  ✓ QB config params in main.php (but replace credentials with production values)
+  ✓ Calculator.php sales_tax field additions
+  ✓ CalculatorController.php sales_tax save
+  ✓ OrderController.php: invoice color by payment_status, JOG code link change,
+    commission button modal target, product list checkboxes (vc mode)
+  ✓ _CalculatorUploadEachSalesRep.php: total_sales pre-fill, sales tax field, JS sync
+  ✓ top.php: #btn_commission_row UI
+  ✓ list.php: _commData flow, _showCommissionButtons, gotoCommission,
+    commission checkbox handler, $800 threshold fix
+
+
+================================================================================
+BRANCH: royality_auto_populate
+Commits vs main: 8  (SUPERSET — includes all of comm_auto_populate + 1 extra)
+  - 3e72fa8  royality_auto_populate: auto-populate royalty fields changes
+  - 19d1242  comm_auto_populate: auto-populate commission fields changes
+  - 21fb68b  Fix: read live comm% input in openCommFromQuote
+  - e5b09cb  Fix: Commissionable Sales % = max non-zero comm%
+  - 5312e31  Fix: Commissionable Sales % as integer (Math.round)
+  - 6b802e8  Fix: exclude Shipping from weighted average
+  - 1bb3134  Fix: Commissionable Sales % derived from checked item data-commpercent
+  - 577a308  Commission: checkbox-based total, from_jog flow, sales tax, amount received
+================================================================================
+
+FILES CHANGED
+  ALL files changed in comm_auto_populate are ALSO changed here (see that section).
+  The ONE additional change in royality_auto_populate vs comm_auto_populate is:
+
+  1. protected/views/calculator/_CalculatorUploadEachSalesRep.php (royalty extras)
+     BEFORE (comm_auto_populate): used single $feeprice variable fetched from one query
+     AFTER  (royality_auto_populate): fetches ALL quote items in one query and splits:
+       + $credit_card    ← items with 'credit card' in name  (uprice)
+       + $royality       ← items with 'royalty' in name      (uprice * qty)
+       + $namebar_patches← items with 'namebar' AND 'patches'(uprice * qty)
+       + $shipping       ← items with 'shipping' in name     (uprice)
+     + creditcard_feecost field pre-filled with $credit_card  (was $feeprice)
+     + royalty_feecost   field pre-filled with $royality      (was '0')
+     + namebar_patches   field pre-filled with $namebar_patches (was '0')
+
+WHAT TO KEEP IN MAIN (royality additions only):
+  ✓ The multi-item fetch query replacing the 3 separate queries
+  ✓ Auto-populate creditcard_feecost, royalty_feecost, namebar_patches from DB items
+
+
+================================================================================
+BRANCH: comm_auto_populate
+Commits vs main: 7  (SUPERSET of commission_cal + 1 extra commit)
+  - 19d1242  comm_auto_populate: auto-populate commission fields changes
+  - 21fb68b  Fix: read live comm% input in openCommFromQuote
+  - e5b09cb  Fix: Commissionable Sales % = max non-zero comm%
+  - 5312e31  Fix: Commissionable Sales % as integer (Math.round)
+  - 6b802e8  Fix: exclude Shipping from weighted average
+  - 1bb3134  Fix: Commissionable Sales % derived from checked item data-commpercent
+  - 577a308  Commission: checkbox-based total, from_jog flow, sales tax, amount received
+================================================================================
+
+FILES CHANGED
+  1. protected/controllers/OrderController.php
+     a) fetchsalesData action — passes comm_total from POST to the sales rep link URLs:
+          &comm_total=$comm_total&from_jog=1 (appended to both rep1 and rep2 links)
+
+     b) viewQuotation / product list — per item, adds:
+          - Hidden input: class="comm_pro_name"    with product name
+          - Hidden input: class="comm_item_percent" with commission %
+          - Checkbox: class="comm_item_checkbox"
+              data-qdoci, data-amount, data-proname, data-commpercent, data-shipping
+              Pre-checked unless: shipping, royalty, credit card, namebar, patches
+              onchange="recalcCommTotal();"
+
+     c) After product table, adds hidden fields for commission processing:
+          #quote_sales_name, #quote_jog_code, #quote_currency, #quote_grand_total,
+          #quote_est_number, #quote_qdoc_id
+          Plus from tbl_order (by JOG_Code):
+          #quote_year, #quote_month, #quote_invno, #quote_invlnk,
+          #quote_ordname, #quote_per, #quote_per2, #quote_sales2
+
+     d) NEW actionGetCommissionRate() — POST endpoint:
+          Accepts: sales_rep_name
+          Looks up commission_type from user table (maps JOG/NAME → fullname)
+          Returns JSON: {"commission_type": "..."}
+
+  2. protected/views/calculator/_CalculatorUploadEachSalesRep.php
+     + Pre-fill $total from $_GET['comm_total'] if set and not empty
+     + invoice_amount_received field pre-filled with $total (was '0')
+     + Sales Tax field shown only when $_GET['from_jog'] == '1'
+
+  3. protected/views/layouts/top.php
+     + Added #btn_comm_rep_2 button (secondary commission button in modal footer)
+
+  4. protected/views/order/list.php
+     a) viewQuotationFinal success callback:
+          - Hides #btn_comm_rep and #btn_comm_rep_2 on modal prep
+          - After content loads: shows both commission buttons with sales rep label
+          - Calls recalcCommTotal()
+
+     b) Sales rep dropdown change handler (UpdatList):
+          - Refactored duplicate if/else into single check using nonCommReps array
+          - ADDED: calls GetCommissionRate AJAX to fetch commission % for selected rep
+          - Auto-populates Percentage_1 or Percentage_2 span and persists via UpdatList
+
+     c) calComm() — removed $800 threshold that reset comm_percent_input value
+        (items < $800 now keep their comm% visible, only comm value shows 0)
+
+     d) openCommissionData() — accepts new commTotal param, passes comm_total in POST
+
+     e) NEW recalcCommTotal() — updates #btn_comm_rep_label / #btn_comm_rep_label_2
+
+     f) NEW openCommFromQuote():
+          - Reads hidden fields (#quote_jog_code, #quote_sales_name, etc.)
+          - Sums checked .comm_item_checkbox amounts
+          - Commission % = max non-zero % among non-shipping checked items (Math.round)
+          - If 2 reps: calls openCommissionData() + shows #Commission modal
+          - If 1 rep: opens SalesCommission page in new tab with all params
+
+WHAT TO KEEP IN MAIN:
+  ✓ comm_total passing in fetchsalesData links
+  ✓ comm_item_checkbox + hidden fields per product row (comm_pro_name, comm_item_percent)
+  ✓ Hidden commission fields after product table (quote_sales_name, quote_year, etc.)
+  ✓ actionGetCommissionRate() endpoint
+  ✓ _CalculatorUploadEachSalesRep: comm_total pre-fill, from_jog Sales Tax gate
+  ✓ top.php: #btn_comm_rep_2 button
+  ✓ list.php: commission button show/hide, recalcCommTotal, openCommFromQuote,
+    GetCommissionRate auto-populate, nonCommReps refactor, $800 threshold fix,
+    commTotal param in openCommissionData
+
+
+================================================================================
+BRANCH: commission_cal
+Commits vs main: 6  (subset of comm_auto_populate, missing commit 19d1242)
+  - 21fb68b  Fix: read live comm% input in openCommFromQuote
+  - e5b09cb  Fix: Commissionable Sales % = max non-zero comm%
+  - 5312e31  Fix: Commissionable Sales % as integer (Math.round)
+  - 6b802e8  Fix: exclude Shipping from weighted average
+  - 1bb3134  Fix: Commissionable Sales % derived from checked item data-commpercent
+  - 577a308  Commission: checkbox-based total, from_jog flow, sales tax, amount received
+================================================================================
+
+NOTE: This branch is fully contained within comm_auto_populate.
+      If you merge comm_auto_populate, this branch adds nothing extra.
+
+What is MISSING here (present in comm_auto_populate but not commission_cal):
+  - Auto-populate of commission fields changes (commit 19d1242):
+      hidden commission fields per product row in viewQuotation
+      hidden order fields after product table
+      actionGetCommissionRate() endpoint
+
+WHAT TO KEEP IN MAIN:
+  Same as comm_auto_populate. No unique points — use comm_auto_populate instead.
+
+
+================================================================================
+BRANCH: commission_change
+Commits vs main: 1
+  - 072eb69  commission_changes
+================================================================================
+
+NOTE: This branch uses a DIFFERENT approach to commission calculation from
+      comm_auto_populate. Instead of buttons in the modal footer, it adds an
+      inline "Commission Calculation" panel below the product list.
+
+FILES CHANGED
+  1. protected/controllers/OrderController.php
+     a) Product list rows — when action_from == "vp":
+          Adds data-comm-amount and data-comm-name attributes to <tr> elements
+
+     b) viewQuotationFinal JSON response — when action_from == "vp":
+          Adds sales_rep_info array (Sales_Rep_1, Percentage_1, Sales_Rep_2,
+          Percentage_2, Inv_no, Invlink, Order_Name, month, year)
+          Adds jog_code string
+
+  2. protected/views/calculator/_CalculatorUploadEachSalesRep.php
+     + Pre-fills total_sales field (not invoice_amount_received) from $_GET['comm_total']
+     + Always shows Sales Tax field (not gated on from_jog)
+     + Added JS: on page load sets invoice_amount_received = total_sales value,
+       then keeps them in sync on change
+
+  3. protected/views/order/list.php
+     a) calComm() replaced with initJogCommissionPanel(resp, jog_code_main, action_from)
+
+     b) Added CSS: #jog-comm-panel, .jog-comm-rep-btn, .comm-item-cb-wrap, etc.
+
+     c) NEW JS functions (inline commission panel approach):
+          initJogCommissionPanel(resp, jog_code_main, action_from)
+            - Only runs when action_from === 'vp'
+            - Reads data-comm-amount/data-comm-name from product table rows
+            - Prepends checkboxes to each row (unchecked for excluded items)
+            - Appends #jog-comm-panel div with total + rep buttons
+          jogUpdateCommTotal()
+            - Sums checked .jog-comm-cb amounts into #jog-comm-total
+          buildJogRepButtons(repInfo, jogCode, $container)
+            - Creates buttons for rep1 and rep2 from server response
+          openJogCommCalcModal(btnEl)
+            - Reads total from #jog-comm-total, opens SalesCommission in new tab
+
+     d) calComm() change: removed $800 threshold comm_percent_input reset
+
+WHAT TO KEEP IN MAIN (if choosing this approach over comm_auto_populate):
+  ✓ data-comm-amount / data-comm-name attributes on <tr> in vp mode
+  ✓ sales_rep_info + jog_code in JSON response (vp mode)
+  ✓ _CalculatorUploadEachSalesRep: total_sales pre-fill, Sales Tax field,
+    invoice_amount_received sync JS
+  ✓ Inline commission panel (CSS + JS): initJogCommissionPanel, jogUpdateCommTotal,
+    buildJogRepButtons, openJogCommCalcModal
+
+CONFLICT NOTE: commission_change and comm_auto_populate/royality_auto_populate
+  implement commission selection differently:
+    - commission_change: inline panel below product list, uses action_from='vp',
+      all data from server JSON response
+    - comm_auto_populate: buttons in modal footer, uses action_from='vc',
+      uses client-side hidden fields populated per product row
+  → You must CHOOSE ONE approach or carefully merge both. Recommend royality_auto_populate
+    (most complete) and only take the _CalculatorUploadEachSalesRep.php total_sales
+    pre-fill and the invoice_amount_received sync JS from commission_change.
+
+
+================================================================================
+BRANCHES WITH NO UNIQUE CHANGES (already in main or empty)
+================================================================================
+  commission_calculation  — 0 commits ahead of main (no action needed)
+  commission_changes      — 0 commits ahead of main (no action needed)
+  new_changes             — 0 commits ahead of main (no action needed)
+
+
+================================================================================
+RECOMMENDED MERGE ORDER INTO MAIN
+================================================================================
+
+Step 1: Merge royality_auto_populate
+  → This is the most complete commission branch. It includes all commits from
+    commission_cal and comm_auto_populate plus royalty auto-populate.
+  → KEY FEATURES:
+      - Commission checkbox-based total calculation
+      - Auto-populate commission % on sales rep selection
+      - openCommFromQuote() function with max comm% logic
+      - commission_item_checkbox checkboxes in estimate view
+      - hidden fields (#quote_sales_name, #quote_year, etc.)
+      - actionGetCommissionRate() endpoint
+      - Sales Tax field (from_jog gated)
+      - Amount Received pre-fill from comm_total
+      - Auto-populate royalty_feecost, creditcard_feecost, namebar_patches
+      - commission button show/hide in modal
+
+Step 2: Merge QBIntegration
+  → Adds entirely new functionality (QuickBooks OAuth2 + Webhooks).
+  → KEY FEATURES:
+      - QuickbooksWebhookController.php (new file)
+      - QbToken.php model (new file)
+      - QB config params
+      - Invoice payment status coloring (green/orange for paid/partial)
+      - sales_tax field in Calculator model
+      - commission checkbox column in product list (vc mode)
+  → CONFLICT AREAS TO RESOLVE MANUALLY:
+      - OrderController.php: JOG Code link click handler (QBIntegration uses
+        openCommissionData with _commData + 'vc' mode; royality_auto_populate
+        uses its own flow with 'vp' mode) — decide which modal/mode to use
+      - list.php: _showCommissionButtons vs openCommFromQuote approach
+        (QBIntegration puts buttons in modal footer row;
+         royality_auto_populate puts Comm button in modal footer)
+      - _CalculatorUploadEachSalesRep.php: QBIntegration reads $_GET['total_sales'];
+        royality_auto_populate reads $_GET['comm_total'] — both needed
+
+Step 3: Handle commission_change selectively
+  → Do NOT merge the full branch (conflicts with royality_auto_populate approach).
+  → Cherry-pick only these specific changes:
+      a) _CalculatorUploadEachSalesRep.php:
+         - Pre-fill total_sales field from $_GET['comm_total'] (in addition to
+           invoice_amount_received which royality_auto_populate already does)
+         - Invoice amount received sync JS (on page load + on change)
+      b) list.php: the $800 threshold fix is ALREADY in royality_auto_populate
+
+
+================================================================================
+FILES THAT NEED CHANGES IN MAIN (QUICK CHECKLIST)
+================================================================================
+
+  [ ] protected/config/main.php
+        → Add QB params (use production credentials, not sandbox)
+
+  [ ] protected/controllers/QuickbooksWebhookController.php  [NEW]
+        → From QBIntegration branch
+
+  [ ] protected/models/QbToken.php  [NEW]
+        → From QBIntegration branch
+
+  [ ] protected/models/Calculator.php
+        → sales_tax field additions (from QBIntegration)
+
+  [ ] protected/controllers/CalculatorController.php
+        → sales_tax save (from QBIntegration)
+
+  [ ] protected/controllers/OrderController.php
+        → comm_total passing in fetchsalesData (from royality_auto_populate)
+        → comm_item_checkbox per product row (from royality_auto_populate)
+        → hidden commission fields after product table (from royality_auto_populate)
+        → actionGetCommissionRate() (from royality_auto_populate)
+        → Invoice color by payment_status (from QBIntegration)
+        → Product list checkbox column (vc mode) (from QBIntegration)
+        → JOG Code link click handler — DECIDE: 'vc' vs 'vp' mode
+
+  [ ] protected/views/calculator/_CalculatorUploadEachSalesRep.php
+        → comm_total / total_sales pre-fill (from both branches — merge both params)
+        → invoice_amount_received pre-fill (from royality_auto_populate)
+        → Sales Tax field (from royality_auto_populate / commission_change)
+        → Auto-populate royalty, credit card, namebar fields (from royality_auto_populate)
+        → invoice_amount_received sync JS (from commission_change)
+
+  [ ] protected/views/layouts/top.php
+        → #btn_comm_rep_2 button (from royality_auto_populate)
+        → #btn_commission_row div (from QBIntegration) — decide which UI to use
+
+  [ ] protected/views/order/list.php
+        → Commission button show/hide after load (from royality_auto_populate)
+        → recalcCommTotal() / openCommFromQuote() (from royality_auto_populate)
+        → GetCommissionRate auto-populate (from royality_auto_populate)
+        → nonCommReps array refactor (from royality_auto_populate)
+        → $800 threshold fix — calComm() no longer resets comm% input
+        → commTotal param in openCommissionData (from royality_auto_populate)
+        → _commData + _showCommissionButtons + gotoCommission (from QBIntegration)
+        → Modal close reset (from QBIntegration)
+
+================================================================================
+END OF SUMMARY
+================================================================================

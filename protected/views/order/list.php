@@ -3271,6 +3271,14 @@ echo phpversion();
                     targets: '_all'
                 }],
                 drawCallback: function() {
+                    $('#orderTable tbody tr td').each(function() {
+                        var status = $(this).find('.invlink[data-paystatus]').data('paystatus');
+                        if (status === 'paid') {
+                            $(this).css('border', '2px solid #28a745');
+                        } else if (status === 'partial') {
+                            $(this).css('border', '2px solid #fd7e14');
+                        }
+                    });
                 },
                 initComplete: function() {
                     // After DataTable is fully loaded, allow reloads

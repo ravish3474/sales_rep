@@ -204,8 +204,8 @@ return array(
                 'class' => 'CLogRouter',
                 'routes' => array(
                     array(
-                        'class' => 'CFileLogRoute',
-                        'levels' => 'error, warning',
+                        'class'  => 'CFileLogRoute',
+                        'levels' => 'error, warning, info',
                     ),
                     // uncomment the following to show log messages on web pages
                     /*
@@ -252,5 +252,13 @@ return array(
     'params' => array(
         // this is used in contact page
         'adminEmail' => 'webmaster@example.com',
+
+        // QuickBooks OAuth2 + Webhooks configuration
+        // Fill in credentials from your Intuit Developer app dashboard.
+        'QB_CLIENT_ID'              => 'ABVRht0ENDuIRKuBPe6kbK0bmQCHaZSVFdqf9DFmrf1heOIx3C',
+        'QB_CLIENT_SECRET'          => 'uqFZjZghbajdCDErrsXcsSHIMGhr1gIQ8Nc5Bwwq',
+        'QB_WEBHOOK_VERIFIER_TOKEN' => 'c0f44127-994c-47e7-a065-cf0c6e4d0814',   // Webhook verifier token (from QB dashboard)
+        'QB_REALM_ID'               => '9341456685599232',   // QuickBooks Company ID (realm ID)
+        'QB_BASE_URL'               => 'production',
     ),
 );
