@@ -2776,6 +2776,7 @@ $currency_map = [
                             echo '<span id="btn_approve"></span><span id="btn_reject"></span>';
                         }
                         ?>
+                        <button id="btn_comm_rep_2" type="button" class="btn btn-info btn-fixed" style="display:none;" onclick="return openCommFromQuote();"><span id="btn_comm_rep_label_2">Comm</span></button>
                         <button id="btn_save" type="button" class="btn btn-primary btn-fixed byapprove" onclick="return saveEstimate();">Save Data</button>
                         <button style="float:right;" id="btn_print" type="button" class="btn btn-warning" onclick="printQuotation();">Print</button>
                         <button style="float:right;" id="btn_refresh_date" type="button" class="btn btn-secondary" onclick="refreshDate();">Refresh Date</button>

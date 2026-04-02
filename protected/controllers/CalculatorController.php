@@ -1485,6 +1485,7 @@ class CalculatorController extends AuthController
 				$model->total_sales = $_POST['Calculator']['total_sales'];
 				$model->creditcard_feecost = $_POST['Calculator']['creditcard_feecost'];
 				$model->royalty_feecost = $_POST['Calculator']['royalty_feecost'];
+				$model->sales_tax = isset($_POST['Calculator']['sales_tax']) ? (float)$_POST['Calculator']['sales_tax'] : 0;
 				$model->comp_itemcost = $_POST['Calculator']['comp_itemcost'];
 				$model->shipping_cost = $_POST['Calculator']['shipping_cost'];
 				$model->invoice_amount_received = $_POST['Calculator']['invoice_amount_received'];
