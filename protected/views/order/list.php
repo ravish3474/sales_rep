@@ -3279,6 +3279,10 @@ echo phpversion();
                             $(this).css('border', '2px solid #fd7e14');
                         }
                     });
+                    // Refresh payment statuses from DB for newly rendered rows
+                    if (typeof refreshVisiblePaymentStatuses === 'function') {
+                        refreshVisiblePaymentStatuses();
+                    }
                 },
                 initComplete: function() {
                     // After DataTable is fully loaded, allow reloads
@@ -4628,4 +4632,119 @@ echo phpversion();
             })
         }
     }
+</script>
+
+<!-- Invoice click: fetch live QB payment status then open link + real-time polling -->
+<script>
+    /**
+     * Apply a payment status to an .invlink div:
+     *  - updates data-paystatus attribute & CSS class
+     *  - updates / removes the .pay-status-label span
+     *  - updates the parent TD border
+     */
+    function applyPaymentStatus($div, status) {
+        $div.attr('data-paystatus', status);
+        $div.removeClass('paystatus-paid paystatus-partial paystatus-unpaid')
+            .addClass('paystatus-' + status);
+
+        $div.find('.pay-status-label').remove();
+        if (status === 'paid') {
+            $div.find('[class^="invtital"]').after(
+                '<span class="pay-status-label" style="display:block;font-size:11px;color:#28a745;font-weight:600;">Paid</span>'
+            );
+        } else if (status === 'partial') {
+            $div.find('[class^="invtital"]').after(
+                '<span class="pay-status-label" style="display:block;font-size:11px;color:#fd7e14;font-weight:600;">Partially Paid</span>'
+            );
+        }
+
+        var $td = $div.closest('td');
+        if (status === 'paid') {
+            $td.css('border', '2px solid #28a745');
+        } else if (status === 'partial') {
+            $td.css('border', '2px solid #fd7e14');
+        } else {
+            $td.css('border', '');
+        }
+    }
+
+    /**
+     * Collect order IDs for every visible .invlink[data-orderid] in the table,
+     * call the fast DB-only batch endpoint, and update the UI without a full reload.
+     */
+    function refreshVisiblePaymentStatuses() {
+        var ids = [];
+        $('#orderTable').find('.invlink[data-orderid]').each(function () {
+            var id = $(this).data('orderid');
+            if (id) { ids.push(id); }
+        });
+        if (!ids.length) { return; }
+
+        $.ajax({
+            url: '<?php echo Yii::app()->request->baseUrl; ?>/quickbooksWebhook/getPaymentStatuses',
+            type: 'POST',
+            dataType: 'json',
+            timeout: 10000,
+            data: { order_ids: ids.join(',') },
+            success: function (response) {
+                if (!response) { return; }
+                $.each(response, function (orderId, status) {
+                    var $div = $('#orderTable').find('.invlink[data-orderid="' + orderId + '"]');
+                    if ($div.length) {
+                        applyPaymentStatus($div, status);
+                    }
+                });
+            }
+            // Silently ignore errors — background poll must never disrupt the UI
+        });
+    }
+
+    (function () {
+        // ── Invoice click: call QB API, update status, then open link ──────
+        var _invClickInProgress = {};
+
+        $(document).on('click', '.invlink a', function (e) {
+            e.preventDefault();
+
+            var $anchor       = $(this);
+            var link          = $anchor.attr('href');
+            var invoiceNumber = $anchor.text().trim();
+            var $parentDiv    = $anchor.closest('.invlink');
+
+            if (!link || !invoiceNumber) {
+                if (link) { window.open(link, '_blank'); }
+                return;
+            }
+
+            // Debounce: ignore rapid double-clicks within 800 ms
+            var now = Date.now();
+            if (_invClickInProgress[invoiceNumber] && (now - _invClickInProgress[invoiceNumber]) < 800) {
+                window.open(link, '_blank');
+                return;
+            }
+            _invClickInProgress[invoiceNumber] = now;
+
+            $.ajax({
+                url: '<?php echo Yii::app()->request->baseUrl; ?>/quickbooksWebhook/getInvoiceStatus',
+                type: 'POST',
+                dataType: 'json',
+                timeout: 8000,
+                data: { invoice_number: invoiceNumber },
+                success: function (response) {
+                    if (response && response.status && response.payment_status) {
+                        applyPaymentStatus($parentDiv, response.payment_status);
+                    }
+                    window.open(link, '_blank');
+                },
+                error: function () {
+                    window.open(link, '_blank');
+                }
+            });
+        });
+
+        // ── Periodic poll: refresh statuses every 30 s while page is open ──
+        $(document).ready(function () {
+            setInterval(refreshVisiblePaymentStatuses, 30000);
+        });
+    }());
 </script>
