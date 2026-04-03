@@ -451,6 +451,42 @@ class OrderController extends AuthController
             $paginatedOrders = array_slice($mergedOrders, $start, $length);
         }
 
+        // --- Batch-fetch tbl_quote_item split commissions for new orders (no Sales_Rep_1 assigned) ---
+        // Only applies to new orders; existing orders use tbl_order.Percentage_1/2 directly.
+        $quoteCommMap = array(); // keyed by qdoci_id (= tbl_quote_doc.qdoc_id = quotation_data.qdoci_id)
+        $qdociIdsForNewOrders = array();
+        foreach ($paginatedOrders as $ord) {
+            if (!isset($ord['empty1']) && empty($ord['Sales_Rep_1']) && !empty($ord['qdoci_id'])) {
+                $qdociIdsForNewOrders[] = $ord['qdoci_id'];
+            }
+        }
+        if (!empty($qdociIdsForNewOrders)) {
+            $escapedIds = array_map('intval', $qdociIdsForNewOrders);
+            $inClause   = implode(',', $escapedIds);
+            // Pick the first item per doc that has any split commission data
+            $sqlQItem = "
+                SELECT qdoc_id, split_comm_1, split_comm_2
+                FROM tbl_quote_item
+                WHERE qdoc_id IN ($inClause)
+                  AND enable = 1
+                ORDER BY sort ASC
+            ";
+            $rawItems = Yii::app()->db->createCommand($sqlQItem)->queryAll();
+            foreach ($rawItems as $qi) {
+                $docId = (int)$qi['qdoc_id'];
+                if (!isset($quoteCommMap[$docId])) {
+                    // Use the first row that has at least one non-empty split_comm value
+                    if ($qi['split_comm_1'] !== '' || $qi['split_comm_2'] !== '') {
+                        $quoteCommMap[$docId] = array(
+                            'split_comm_1' => $qi['split_comm_1'],
+                            'split_comm_2' => $qi['split_comm_2'],
+                        );
+                    }
+                }
+            }
+        }
+        // --- End batch-fetch ---
+
         $names = [
             'FREE', 'REMAKE', 'SAMPLE', 'CANCEL',
             'online store','Sami Holmes'
@@ -772,9 +808,28 @@ class OrderController extends AuthController
                     $salesRep1 = htmlspecialchars($order['Sales_Rep_1']);
                 }
 
+                // Determine Percentage_1 display value
+                // Rule: if Sales_Rep_1 exists → use tbl_order.Percentage_1
+                //       if Sales_Rep_1 empty (new order) → try tbl_quote_item.split_comm_1
+                $quoteComm1 = '';
+                $quoteComm2 = '';
+                $isNewOrder = empty($order['Sales_Rep_1']);
+                if ($isNewOrder && !empty($order['qdoci_id'])) {
+                    $qid = (int)$order['qdoci_id'];
+                    if (isset($quoteCommMap[$qid])) {
+                        $quoteComm1 = $quoteCommMap[$qid]['split_comm_1'];
+                        $quoteComm2 = $quoteCommMap[$qid]['split_comm_2'];
+                    }
+                }
+
                 if ($user_group == '1' || $user_group == '99') {
-                    $per1 = $order['Percentage_1'];
-                }else {
+                    if ($isNewOrder) {
+                        // New order: tbl_order has no commission yet; use quote item commission for display
+                        $per1 = ($quoteComm1 !== '' && $quoteComm1 != 0) ? $quoteComm1 : $order['Percentage_1'];
+                    } else {
+                        $per1 = $order['Percentage_1'];
+                    }
+                } else {
                     if ($fullname == $order['Sales_Rep_1']) {
                        $per1 = $order['Percentage_1'];
                     } else {
@@ -782,9 +837,14 @@ class OrderController extends AuthController
                     }
                 }
 
+                // Extra data attrs so JS can restore quote commission when rep is cleared on a new order
+                $quoteCommAttrs1 = $isNewOrder
+                    ? " data-is-new-order='1' data-quote-comm='" . htmlspecialchars((string)$quoteComm1) . "'"
+                    : "";
+
                 $percentage1 = "<td data-col='7' class='text-center editable-cell' style='text-align: center;'>" .
                     "<div class='text-center " . ($user_group == '1' || $user_group == '99' ? 'editable-cell' : '') . "'>" .
-                    "<span class='editable' data-id='" . $order['id'] . "' data-field='percentage_1'>" . 
+                    "<span class='editable' data-id='" . $order['id'] . "' data-field='percentage_1'" . $quoteCommAttrs1 . ">" . 
                     (isset($per1) && $per1 !== '' ? $per1 : '-')  . 
                     "</span>" .
                     "</div>" .
@@ -812,8 +872,13 @@ class OrderController extends AuthController
                 }
 
                 if ($user_group == '1' || $user_group == '99') {
-                    $per2 = $order['Percentage_2'];
-                }else {
+                    if ($isNewOrder) {
+                        // New order: tbl_order has no commission yet; use quote item commission for display
+                        $per2 = ($quoteComm2 !== '' && $quoteComm2 != 0) ? $quoteComm2 : $order['Percentage_2'];
+                    } else {
+                        $per2 = $order['Percentage_2'];
+                    }
+                } else {
                     if ($fullname == $order['Sales_Rep_2']) {
                         $per2 = $order['Percentage_2'];
                     } else {
@@ -821,9 +886,14 @@ class OrderController extends AuthController
                     }
                 }
 
+                // Extra data attrs so JS can restore quote commission when rep is cleared on a new order
+                $quoteCommAttrs2 = $isNewOrder
+                    ? " data-is-new-order='1' data-quote-comm='" . htmlspecialchars((string)$quoteComm2) . "'"
+                    : "";
+
                 $percentage2 = "<td data-col='9' class='text-center editable-cell' style='text-align: center;'>" .
                     "<div class='text-center " . ($user_group == '1' || $user_group == '99' ? 'editable-cell' : '') . "'>" .
-                    "<span class='editable' data-id='" . $order['id'] . "' data-field='percentage_2'>" . 
+                    "<span class='editable' data-id='" . $order['id'] . "' data-field='percentage_2'" . $quoteCommAttrs2 . ">" . 
                     (isset($per2) && $per2 !== '' ? $per2 : '-') . 
                     "</span>" .
                     "</div>" .
@@ -2655,6 +2725,59 @@ class OrderController extends AuthController
             echo json_encode($response);
             Yii::app()->end();
         }
+    }
+
+    /**
+     * Returns the initial commission percentages for a new order from tbl_quote_item.
+     * Used when a Sales Rep is cleared on a new order or when re-fetching quote-derived commission.
+     * Input (POST): order_id
+     * Output (JSON): { commission_1: "...", commission_2: "..." }
+     */
+    public function actionGetQuoteCommission()
+    {
+        $orderId = isset($_POST['order_id']) ? (int)$_POST['order_id'] : 0;
+        $comm1   = '';
+        $comm2   = '';
+
+        if ($orderId > 0) {
+            // Fetch the order row
+            $order = Yii::app()->db->createCommand(
+                "SELECT o.Sales_Rep_1, o.Percentage_1, o.Percentage_2, q.qdoci_id
+                 FROM tbl_order o
+                 LEFT JOIN quotation_data q ON o.JOG_Code = q.jog_code
+                 WHERE o.id = :oid
+                 LIMIT 1"
+            )->bindValue(':oid', $orderId, PDO::PARAM_INT)->queryRow();
+
+            if ($order) {
+                // If Sales_Rep_1 is present, use tbl_order percentages
+                if (!empty($order['Sales_Rep_1'])) {
+                    $comm1 = $order['Percentage_1'] !== null ? $order['Percentage_1'] : '';
+                    $comm2 = $order['Percentage_2'] !== null ? $order['Percentage_2'] : '';
+                } elseif (!empty($order['qdoci_id'])) {
+                    // New order with no sales rep: fetch from tbl_quote_item
+                    $qdocId = (int)$order['qdoci_id'];
+                    $qItem  = Yii::app()->db->createCommand(
+                        "SELECT split_comm_1, split_comm_2
+                         FROM tbl_quote_item
+                         WHERE qdoc_id = :qid
+                           AND enable = 1
+                           AND (split_comm_1 != '' OR split_comm_2 != '')
+                         ORDER BY sort ASC
+                         LIMIT 1"
+                    )->bindValue(':qid', $qdocId, PDO::PARAM_INT)->queryRow();
+
+                    if ($qItem) {
+                        $comm1 = $qItem['split_comm_1'];
+                        $comm2 = $qItem['split_comm_2'];
+                    }
+                }
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(array('commission_1' => $comm1, 'commission_2' => $comm2));
+        Yii::app()->end();
     }
 
     public function actionGetCommissionRate()

@@ -36,6 +36,7 @@
 
 			$sql = "SELECT * FROM `tbl_quote_doc` WHERE `qdoc_id` = '$qdoci_id'";
 			$tot = Yii::app()->db->createCommand($sql)->queryAll();
+			if (empty($tot)) { continue; }
 			$grand_total = $tot[0]['grand_total'];
 
 			$sql = "SELECT `pro_name`, `uprice`, `qty` FROM `tbl_quote_item` WHERE `qdoc_id` = '$qdoci_id'";

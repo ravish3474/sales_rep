@@ -3567,13 +3567,74 @@ echo phpversion();
             var selectedOption = dropdown.find('option:selected');
             var orderid = selectedOption.data('id');
 
+            // If no option is selected (empty) fall back to any data-id on the first option
+            if (!orderid) {
+                orderid = dropdown.find('option[data-id]').first().data('id');
+            }
+
             // Ask for confirmation
             if (!confirm('Are you sure you want to update the sales representative?')) {
                 console.log("Select: User canceled update.");
                 dropdown.val(initialValue); // Reset dropdown to its initial value                
                 return;
             }
-            // Ajax call to update the value
+
+            var percentField    = (salesRepClass === 'sales_rep_1') ? 'percentage_1' : 'percentage_2';
+            var percentSpan     = dropdown.closest('td').next('td').find('.editable');
+            var isNewOrder      = percentSpan.data('is-new-order') == 1;
+            var quoteCommValue  = percentSpan.data('quote-comm'); // commission from tbl_quote_item (may be undefined)
+
+            // ── Case: Sales Rep cleared on a new order ──────────────────────────────
+            // Restore the quote-derived commission for display only (do NOT save to tbl_order).
+            if (selectedSalesRep === '' && isNewOrder) {
+                // Update tbl_order Sales_Rep field to empty
+                $.ajax({
+                    type: 'POST',
+                    url: 'UpdatList',
+                    data: {
+                        sales_rep: '',
+                        order_id: orderid,
+                        sales_rep_class: salesRepClass
+                    }
+                });
+
+                // Restore quote commission in the UI
+                $.ajax({
+                    type: 'POST',
+                    url: 'GetQuoteCommission',
+                    data: { order_id: orderid },
+                    success: function(response) {
+                        try {
+                            var data = (typeof response === 'string') ? JSON.parse(response) : response;
+                            var restoreVal = (salesRepClass === 'sales_rep_1') ? data.commission_1 : data.commission_2;
+                            percentSpan.text((restoreVal !== '' && restoreVal != null) ? restoreVal : '-');
+                        } catch(e) {
+                            percentSpan.text('-');
+                        }
+                    },
+                    error: function() {
+                        percentSpan.text('-');
+                    }
+                });
+                return;
+            }
+
+            // ── Case: Sales Rep cleared on an existing order ─────────────────────────
+            // Just clear the sales rep and leave the percentage as-is.
+            if (selectedSalesRep === '' && !isNewOrder) {
+                $.ajax({
+                    type: 'POST',
+                    url: 'UpdatList',
+                    data: {
+                        sales_rep: '',
+                        order_id: orderid,
+                        sales_rep_class: salesRepClass
+                    }
+                });
+                return;
+            }
+
+            // Ajax call to update the Sales Rep value in tbl_order
             $.ajax({
                 type: 'POST',
                 url: 'UpdatList', // specify the URL to handle the update
@@ -3594,10 +3655,13 @@ echo phpversion();
                         parentTr.find('.commcar').removeClass("hidden");
                     }
 
-                    // Fetch and auto-populate the commission % for the selected sales rep
-                    var percentField = (salesRepClass === 'sales_rep_1') ? 'percentage_1' : 'percentage_2';
-                    var percentSpan = dropdown.closest('td').next('td').find('.editable');
+                    // Commission auto-fill ONLY applies to new orders (no Sales Rep was set at page load).
+                    // For existing orders: Sales Rep is updated above; the commission % is left unchanged.
+                    if (!isNewOrder) {
+                        return;
+                    }
 
+                    // New order: fetch and auto-populate the commission % for the selected sales rep
                     $.ajax({
                         type: 'POST',
                         url: 'GetCommissionRate',
@@ -3606,13 +3670,17 @@ echo phpversion();
                             try {
                                 var rateData = (typeof rateResponse === 'string') ? JSON.parse(rateResponse) : rateResponse;
                                 var commRate = rateData.commission_type;
-                                // Default to 0 if not found or empty
+
+                                // If commission not found in user mapping → keep blank (do NOT default to 0)
                                 if (commRate === null || commRate === undefined || commRate === '') {
-                                    commRate = 0;
+                                    percentSpan.text('-');
+                                    return;
                                 }
+
                                 // Update the % span in the UI
                                 percentSpan.text(commRate);
-                                // Persist the commission rate to the database
+
+                                // Persist the commission rate to tbl_order only (never tbl_quote_item)
                                 $.ajax({
                                     type: 'POST',
                                     url: 'UpdatList',
