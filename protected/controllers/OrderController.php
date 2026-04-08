@@ -689,15 +689,15 @@ class OrderController extends AuthController
                     $payStatus = 'unpaid';
                 }
                 if ($payStatus === 'paid') {
-                    $payStatusLabel = "<span style='display:block;font-size:11px;color:#28a745;font-weight:600;'>Paid</span>";
+                    $payStatusLabel = "<span class='pay-status-label' style='display:block;font-size:11px;color:#28a745;font-weight:600;'>Paid</span>";
                 } elseif ($payStatus === 'partial') {
-                    $payStatusLabel = "<span style='display:block;font-size:11px;color:#fd7e14;font-weight:600;'>Partially Paid</span>";
+                    $payStatusLabel = "<span class='pay-status-label' style='display:block;font-size:11px;color:#fd7e14;font-weight:600;'>Partially Paid</span>";
                 } else {
                     $payStatusLabel = '';
                 }
 
-                $invLink = "<td data-col='5' " . ($user_group == '1' || $user_group == '99' ? "class='invlink'" : "") . " style='position: relative;'>
-                    <div class='invlink' data-paystatus='" . $payStatus . "'>
+                $invLink = "<td data-col='5' " . ($user_group == '1' || $user_group == '99' ? "class='invlink'" : "") . " style='position: relative;" . $invTdBorder . "'>
+                    <div class='invlink' data-orderid='" . $order['id'] . "' data-paystatus='" . $payStatus . "'>
                     <span class='invtital" . $order['id'] . "'>" . ($order['Inv_no'] != '' ? "$htmlinv" : $inv_tital) . "</span>
                     $payStatusLabel
                     " . ($user_group == '1' || $user_group == '99' ? "<span class='edit-icon' id='invlinkatt" . $order['id'] . "' data-toggle='modal' data-target='#invlink" . $order['id'] . "' onclick=\"invcpopup('" . $order['id'] . "', '" . $cleanInvNo . "', '" . $order['Invlink'] . "')\" style='position: absolute; top: 50%; transform: translateY(-50%); right: 5px; cursor: pointer;display:none'>
