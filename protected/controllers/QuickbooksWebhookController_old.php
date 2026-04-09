@@ -29,7 +29,7 @@ class QuickbooksWebhookController extends Controller
     {
         return array(
             array('allow', 'actions' => array('receive'), 'users' => array('*')),
-            array('allow', 'actions' => array('connect', 'callback'), 'users' => array('@')),
+            array('allow', 'actions' => array('connect', 'callback', 'getInvoiceStatus', 'getPaymentStatuses'), 'users' => array('@')),
             array('deny'),
         );
     }
@@ -40,10 +40,133 @@ class QuickbooksWebhookController extends Controller
      */
     public function beforeAction($action)
     {
-        if ($action->id === 'receive') {
+        if (in_array($action->id, array('receive', 'getInvoiceStatus', 'getPaymentStatuses'))) {
             Yii::app()->request->enableCsrfValidation = false;
         }
         return parent::beforeAction($action);
+    }
+
+    // -----------------------------------------------------------------------
+    // actionGetPaymentStatuses — fast DB-only batch lookup for visible rows
+    // -----------------------------------------------------------------------
+
+    public function actionGetPaymentStatuses()
+    {
+        header('Content-Type: application/json');
+
+        if (!Yii::app()->request->isPostRequest) {
+            echo CJSON::encode(array());
+            Yii::app()->end();
+        }
+
+        $raw = trim(Yii::app()->request->getPost('order_ids', ''));
+        if ($raw === '') {
+            echo CJSON::encode(array());
+            Yii::app()->end();
+        }
+
+        // Sanitise: only allow comma-separated integers
+        $ids = array_filter(array_map('trim', explode(',', $raw)), function ($v) {
+            return ctype_digit($v) && $v !== '';
+        });
+
+        if (empty($ids)) {
+            echo CJSON::encode(array());
+            Yii::app()->end();
+        }
+
+        $db           = Yii::app()->db;
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $rows         = $db->createCommand(
+            "SELECT `id`, COALESCE(`payment_status`, 'unpaid') AS `payment_status`
+             FROM `tbl_order`
+             WHERE `id` IN ($placeholders)"
+        )->queryAll(true, array_values($ids));
+
+        $result = array();
+        foreach ($rows as $row) {
+            $result[(string)$row['id']] = $row['payment_status'];
+        }
+
+        echo CJSON::encode($result);
+        Yii::app()->end();
+    }
+
+    // -----------------------------------------------------------------------
+    // actionGetInvoiceStatus — fetch live payment status for an invoice by DocNumber
+    // -----------------------------------------------------------------------
+
+    public function actionGetInvoiceStatus()
+    {
+        header('Content-Type: application/json');
+
+        if (!Yii::app()->request->isPostRequest) {
+            echo CJSON::encode(array('status' => false, 'error' => 'POST required'));
+            Yii::app()->end();
+        }
+
+        $invoiceNumber = trim(Yii::app()->request->getPost('invoice_number', ''));
+        if ($invoiceNumber === '') {
+            echo CJSON::encode(array('status' => false, 'error' => 'Missing invoice_number'));
+            Yii::app()->end();
+        }
+
+        // Sanitise: DocNumbers are alphanumeric with hyphens/spaces only
+        if (!preg_match('/^[\w\s\-\/]+$/', $invoiceNumber)) {
+            echo CJSON::encode(array('status' => false, 'error' => 'Invalid invoice_number'));
+            Yii::app()->end();
+        }
+
+        $realmId = Yii::app()->params['QB_REALM_ID'];
+        $token   = $this->_getValidToken($realmId);
+        if ($token === null) {
+            Yii::log('QB getInvoiceStatus: no valid token for realmId=' . $realmId, CLogger::LEVEL_ERROR, 'quickbooks');
+            echo CJSON::encode(array('status' => false, 'error' => 'QB not connected'));
+            Yii::app()->end();
+        }
+
+        // Use the QB Query API to look up the invoice by DocNumber
+        $baseUrl  = $this->_apiBase();
+        $query    = "SELECT Balance, TotalAmt FROM Invoice WHERE DocNumber = '" . addslashes($invoiceNumber) . "'";
+        $url      = $baseUrl . '/v3/company/' . $realmId . '/query?query=' . urlencode($query) . '&minorversion=65';
+        $response = $this->_curlGet($url, $token->access_token);
+
+        if ($response === false) {
+            Yii::log('QB getInvoiceStatus: API call failed for DocNumber=' . $invoiceNumber, CLogger::LEVEL_ERROR, 'quickbooks');
+            echo CJSON::encode(array('status' => false, 'error' => 'QB API error'));
+            Yii::app()->end();
+        }
+
+        $data = json_decode($response, true);
+        $invoices = isset($data['QueryResponse']['Invoice']) ? $data['QueryResponse']['Invoice'] : array();
+
+        if (empty($invoices)) {
+            // Invoice not found in QB — return status false so the link still opens
+            echo CJSON::encode(array('status' => false, 'error' => 'Invoice not found in QB'));
+            Yii::app()->end();
+        }
+
+        // Use the first matching invoice
+        $invoice  = $invoices[0];
+        $balance  = isset($invoice['Balance'])  ? (float)$invoice['Balance']  : 0.0;
+        $totalAmt = isset($invoice['TotalAmt']) ? (float)$invoice['TotalAmt'] : 0.0;
+
+        if ($balance <= 0) {
+            $paymentStatus = 'paid';
+        } elseif ($balance < $totalAmt) {
+            $paymentStatus = 'partial';
+        } else {
+            $paymentStatus = 'unpaid';
+        }
+
+        // Also persist to local DB (same as webhook path)
+        $this->_updateOrderPaymentStatus($invoiceNumber, $paymentStatus, '');
+
+        echo CJSON::encode(array(
+            'status'         => true,
+            'payment_status' => $paymentStatus,
+        ));
+        Yii::app()->end();
     }
 
     // -----------------------------------------------------------------------
@@ -286,6 +409,7 @@ class QuickbooksWebhookController extends Controller
      * Update tbl_order rows where Inv_no contains the given doc number (exact, case-insensitive).
      * Because Inv_no is a CSV field we cannot use a simple = comparison; we use FIND_IN_SET
      * on a space-stripped copy, or fall back to LIKE with explicit boundary matching.
+     * Also syncs payment_status to order_main in jogjoino_lockerroom (db2) via JOG_Code.
      */
     private function _updateOrderPaymentStatus($docNumber, $paymentStatus, $qbPaymentId)
     {
@@ -304,6 +428,13 @@ class QuickbooksWebhookController extends Controller
         $statusVal = $db->quoteValue($paymentStatus);
         $qbIdVal   = $db->quoteValue($qbPaymentId);
 
+        // Fetch JOG_Code values for the rows that are about to be updated
+        // so we can sync to order_main in db2 afterwards.
+        $jogCodes = $db->createCommand(
+            "SELECT `JOG_Code` FROM `tbl_order`
+             WHERE FIND_IN_SET($docVal, REPLACE(`Inv_no`, ' ', '')) > 0"
+        )->queryColumn();
+
         $db->createCommand(
             "UPDATE `tbl_order`
              SET `payment_status` = $statusVal,
@@ -311,6 +442,26 @@ class QuickbooksWebhookController extends Controller
                  `qb_payment_datetime`  = NOW()
              WHERE FIND_IN_SET($docVal, REPLACE(`Inv_no`, ' ', '')) > 0"
         )->execute();
+
+        // Sync payment_status to order_main in jogjoino_lockerroom (db2)
+        if (!empty($jogCodes)) {
+            $db2        = Yii::app()->db2;
+            $statusVal2 = $db2->quoteValue($paymentStatus);
+            foreach ($jogCodes as $jogCode) {
+                $jogCodeVal = $db2->quoteValue($jogCode);
+                $db2->createCommand(
+                    "UPDATE `order_main`
+                     SET `payment_status` = $statusVal2,`qb_payment_datetime`  = NOW()
+                     WHERE `order_main_code` = $jogCodeVal"
+                )->execute();
+            }
+            Yii::log(
+                'QB: synced payment_status=' . $paymentStatus
+                    . ' to order_main for JOG codes: ' . implode(', ', $jogCodes),
+                CLogger::LEVEL_INFO,
+                'quickbooks'
+            );
+        }
     }
 
     /**

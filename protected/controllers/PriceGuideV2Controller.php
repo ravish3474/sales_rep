@@ -5277,6 +5277,7 @@ public function actionCopyExtraSubmitCat()
 							<select name="customer_type" id="add_customer_type" style="width:50% !important">
 								<option value="">Select Customer Type</option>
 								<option value="College Retail - Bookstore">College Retail - Bookstore</option>
+								<option value="College/Junior/Semi Pro/Pro">College/Junior/Semi Pro/Pro</option>
 								<option value="Dealer">Dealer</option>
 								<option value="Factory Direct Customers">Factory Direct Customers</option>
 								<option value="International Sales">International Sales</option>
@@ -5287,7 +5288,8 @@ public function actionCopyExtraSubmitCat()
 								<option value="Sales Direct College & Juniors">Sales Direct College & Juniors</option>
 								<option value="Sales Direct to Business Camps, Misc.">Sales Direct to Business Camps, Misc.</option>
 								<option value="Sales Direct - Other Sports">Sales Direct - Other Sports</option>
-								<option value="Sales Direct - Adult Hockey Teams/Leagues">Sales Direct - Adult Hockey Teams/Leagues</option>				
+								<option value="Sales Direct - Adult Hockey Teams/Leagues">Sales Direct - Adult Hockey Teams/Leagues</option>
+												
 							</select>
 						</div>';
 		$return_html .= '</div>';

@@ -6959,7 +6959,7 @@ GRAPHQL;
 
 				if( $user_group=="1" || $user_group=="99" ){
 
-					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) ORDER BY fullname ASC;";
+					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) AND `fullname` NOT IN ('Jim', 'Lucas Trickle', 'Matt Carey', 'Mike Nightingale', 'Shane Hiley', 'Trevor Easthope') ORDER BY fullname ASC;";
 
 					$sales_user = Yii::app()->db->createCommand($sql_user)->queryAll();
 					
@@ -7053,7 +7053,7 @@ GRAPHQL;
 
 
 				if ($user_group == "1" || $user_group == "99") {
-					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) ORDER BY fullname ASC;";
+					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) AND `fullname` NOT IN ('Jim', 'Lucas Trickle', 'Matt Carey', 'Mike Nightingale', 'Shane Hiley', 'Trevor Easthope') ORDER BY fullname ASC;";
 
 					$sales_user = Yii::app()->db->createCommand($sql_user)->queryAll();
 					

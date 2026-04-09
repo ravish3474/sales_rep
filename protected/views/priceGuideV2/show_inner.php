@@ -824,9 +824,11 @@ document.querySelectorAll(".focusingOnSection a").forEach((btn) => {
 });
 
 let lastVisible = false;
+let modalOpen = false;
 
 // ⭐ Scroll logic function
 function handleScroll(scrollTop) {
+  if (modalOpen) return;
   const shouldShow = scrollTop > 50;
 
   if (shouldShow && !lastVisible) {
@@ -853,6 +855,20 @@ if (lowerTable) {
 // Scroll from main page scrollbar
 window.addEventListener("scroll", function () {
   handleScroll(window.scrollY);
+});
+
+// Hide nav when any modal opens, restore when modal closes
+$(document).on("show.bs.modal", function () {
+  modalOpen = true;
+  focusSection.classList.remove("show");
+});
+$(document).on("hidden.bs.modal", function () {
+  // Another modal may have opened before this one finished closing
+  if ($('.modal.in').length > 0 || $('.modal.show').length > 0) return;
+  modalOpen = false;
+  if (lastVisible) {
+    focusSection.classList.add("show");
+  }
 });
 </script>
 

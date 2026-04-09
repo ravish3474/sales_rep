@@ -744,6 +744,10 @@
     #conv_estimate_online .column2{
         grid-column: span 2;
     }
+    #conv_estimate_online label
+    {
+        font-size:14px !important;
+    }
     @media screen and (max-width:1500px) {
         #quoteDocModal .modal-dialog {
             max-width: 90% !important;
@@ -1071,7 +1075,6 @@
 $user_group = Yii::app()->user->getState('userGroup');
 $user_id = Yii::app()->user->getState('userKey');
 $full_name = Yii::app()->user->getState('fullName');
-$chat_type = ($user_group == "99" || $user_group == "1") ? "A" : "E";
 ?>
 <div id="ajax-loader" style="display: none;">
     <div id="loader-content">
@@ -3232,7 +3235,7 @@ $chat_type = ($user_group == "99" || $user_group == "1") ? "A" : "E";
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="control-label col-sm-2">Online Store:</label>
+                        <label class="control-label col-sm-2">Type of Store (TUO/Optimx):</label>
                         <div class="col-12">
                             <select class="form-control" required name="online_store_name">
                                 <option value="" selected disabled>==Select Online Store==</option>

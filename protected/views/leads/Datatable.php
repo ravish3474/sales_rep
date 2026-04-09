@@ -82,7 +82,7 @@
     }
 
     .allMultiList {
-        max-height: 170px;
+        max-height: 255px;
         overflow-y: auto;
         overflow-x: hidden;
         scrollbar-width: none;
@@ -250,6 +250,19 @@
 
         }
     }
+
+        #other_sales_person_div.d-none{
+         display: none;
+    }
+
+    .allMultiList .other_bottom_section{
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            background: #ebf2f8;
+    }
+
+
 </style>
 <div class="table-responsive ">
 
@@ -829,14 +842,59 @@
 
     });
 
-    $(document).on('click', '.hideSaleRepModal , .savebtn', function() {
-        let month = $('#month_filter').val();
-        let sales_rep = $('.sales_person_selection').val();
-        let year = $('#date_picker').val();
-        let page = $('.tab-pane.active  .paginationBtns.active').attr('href');
+    // $(document).on('click', '.hideSaleRepModal , .savebtn', function() {
+    //     let month = $('#month_filter').val();
+    //     let sales_rep = $('.sales_person_selection').val();
+    //     let year = $('#date_picker').val();
+    //     let page = $('.tab-pane.active  .paginationBtns.active').attr('href');
 
-        callDatatable(global_status, month, sales_rep, year, page);
-    });
+    //      let checkbox =  $('#other_checkbox');
+      
+    //   let isSaveBtn = $(this).hasClass('savebtn');
+    //    if(checkbox.is(':checked')  && isSaveBtn) {
+    //        let name = $('#other_sales_person_div').find('#other_sales_person_name').val(); 
+    //        let email = $('#other_sales_person_div').find('#other_sales_person_email').val(); 
+    //        let is_send_mail = $('#other_sales_person_div') .find('#is_send_email')
+    //         .is(':checked') ? 1 : 0;
+    //        let lead_id = $('#lead_id_assign').val();
+    //        let other_id = $('#other_sales_person_div').find('#other_sales_id').val(); 
+
+    //        if(name == '' || email ==''){
+    //            alert("Please  enter name and email"); 
+    //           event.preventDefault();
+    //         //   event.stopPropagation(); 
+    //            return false ; 
+    //        }
+
+    //           $.ajax({
+    //             url: 'SavemultipleSalesRep',
+    //             method: 'POST',
+    //             data: {
+    //                 lead_id: lead_id,
+    //                 name : name , 
+    //                 email : email , 
+    //                 is_send_mail : is_send_mail, 
+    //                 other_id : other_id , 
+    //                 type : 'Other' , 
+    //             },
+    //             success: function(response) {
+    //                 getAllAssignedSaleRep(lead_id);
+    //                 getsalesRepList(lead_id);
+    //                 hideLoader();
+    //             },
+    //             error: function(xhr, status, error) {
+    //                 console.warn("Something went wrong");
+    //                 hideLoader();
+    //             }
+    //         });
+
+
+    //    }  
+
+
+
+    //     callDatatable(global_status, month, sales_rep, year, page);
+    // });
 
 
     $(document).on('change', '.sales_rep_checkbox', function() {
@@ -878,6 +936,8 @@
                 data: {
                     lead_id: main_id,
                     multiple_id: multiple_id,
+                    salesPerson:checked_values
+
                 },
                 success: function(response) {
                     getAllAssignedSaleRep(lead_id);
@@ -892,4 +952,18 @@
         }
 
     });
+
+
+        // add update other sales person  
+$(document).on('change', '#other_checkbox', function () {
+   let checkbox = $(this);
+   let main_div = $('#other_sales_person_div');
+
+   if (checkbox.is(':checked')) {
+      main_div.removeClass('d-none');
+   } else {
+      main_div.addClass('d-none');
+   }
+});
+
 </script>

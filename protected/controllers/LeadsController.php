@@ -130,7 +130,7 @@ class LeadsController extends AuthController
     {
             $sq = "SELECT * FROM `tbl_leads`";
             $adminLeads = Yii::app()->db->createCommand($sq)->queryAll();
-            $country = "SELECT DISTINCT country_name  FROM `tbl_country`";
+            $country = "SELECT DISTINCT country_name  FROM `tbl_country`  WHere country_name Not like '%USA-open%' ";
             $countryName = Yii::app()->db->createCommand($country)->queryAll();
             $product = Yii::app()->db->createCommand("SELECT * FROM tbl_product ORDER BY sort ASC;")->queryAll();
             $sales_person = User::GetAlluser();
@@ -209,7 +209,7 @@ class LeadsController extends AuthController
     public function actionAdminLeads()
     {
      
-        $country = "SELECT DISTINCT country_name  FROM `tbl_country`";
+        $country = "SELECT DISTINCT country_name  FROM `tbl_country`  Where country_name Not like '%USA-open%'";
         $countryName = Yii::app()->db->createCommand($country)->queryAll();
         $sales_person = User::GetAlluser();   
         $product = Yii::app()->db->createCommand("SELECT * FROM tbl_product ORDER BY sort ASC;")->queryAll();
@@ -225,7 +225,7 @@ class LeadsController extends AuthController
 
     public function actionAdminTeamLeads()
     {
-        $country = "SELECT DISTINCT country_name  FROM `tbl_country`";
+        $country = "SELECT DISTINCT country_name  FROM `tbl_country`  WHere country_name Not like '%USA-open%'";
         $countryName = Yii::app()->db->createCommand($country)->queryAll();
         $product = Yii::app()->db->createCommand("SELECT * FROM tbl_product ORDER BY sort ASC;")->queryAll();
         $sales_person = User::GetAlluser();
@@ -311,7 +311,7 @@ class LeadsController extends AuthController
         $is_exits = false ;
             foreach ($state_name as $state) {
                 foreach ($sales_Person as $key => $sales_name) {
-                    $is_exits = Yii::app()->db->createCommand("SELECT * FROM lead_sales WHERE state_name ='$state'and sales_name ='$sales_name'")->queryScalar(); 
+                    $is_exits = Yii::app()->db->createCommand("SELECT * FROM lead_sales WHERE state_name ='$state'and sales_name ='$sales_name' AND status!=0")->queryScalar(); 
                     $sales = $is_exits ? Null  :new LeadSales();
                     if($sales):
                         $sales->sales_name = $sales_name;            
@@ -829,7 +829,7 @@ class LeadsController extends AuthController
 
         $sql = "SELECT * FROM tbl_leads WHERE lead_id = $id"; 
         $sales = Yii::app()->db->createCommand($sql)->queryRow(); 
-        $country = "SELECT DISTINCT country_name  FROM `tbl_country`";
+        $country = "SELECT DISTINCT country_name  FROM `tbl_country`  WHere country_name Not like '%USA-open%'";
         $countryName = Yii::app()->db->createCommand($country)->queryAll();
         $sales_person = User::GetAlluser();   
 
@@ -1852,36 +1852,39 @@ class LeadsController extends AuthController
     }
 
     public function actiongetCountrySalesRep(){
-        $sq = "SELECT * FROM `lead_sales` ";
+        $sq = "SELECT * FROM `lead_sales`  where status =1 ";
         $adminSales = Yii::app()->db->createCommand($sq)->queryAll();
 
         $groupedSales = [];
 
+       
+
         foreach ($adminSales as $sale) {
-            $state = $sale['state_name'];
-            $country = $sale['country_name'];  
-            $priority = $sale['state_priority'];
-            // If state does not exist, create parent array with state_name
-            if (!isset($groupedSales[$state])) {
-                $groupedSales[$state] = [
-                    'state_name' => $state,
+                $state = $sale['state_name'];
+                $country = $sale['country_name'];  
+                $priority = $sale['state_priority'];
+
+                // If state does not exist, create parent array
+                if (!isset($groupedSales[$state])) {
+                    $groupedSales[$state] = [
+                    'state_name'   => $state,
                     'country_name' => $country,
-                    'priority'=>$priority,
-                    'data' => []
-                ];
+                    'priority'     => $priority,
+                    'data'         => []
+                    ];
+                }
+
+                // ✅ FIX: Update country_name if currently empty and new value is not empty
+                if (
+                    empty($groupedSales[$state]['country_name']) &&
+                    !empty($country)
+                ) {
+                    $groupedSales[$state]['country_name'] = $country;
+                }
+
+                  unset($sale['state_name']); 
+                   $groupedSales[$state]['data'][] = $sale;
             }
-
-            unset($sale['state_name']); // Remove state_name from the individual record
-            $groupedSales[$state]['data'][] = $sale;
-        }
-
-        // Sort each state's data array by `sales_priority`
-        foreach ($groupedSales as &$group) {
-            usort($group['data'], function ($a, $b) {
-                return $a['sales_priority'] - $b['sales_priority']; // Ascending order
-                // Use `return $b['sales_priority'] - $a['sales_priority'];` for descending order
-            });
-        }
 
       
 
@@ -1921,12 +1924,12 @@ class LeadsController extends AuthController
 
  public function actionUpdateQueryRaw(){
      $id = $_POST['id']; 
-     $country = $_POST['country']; 
+     $country = $_POST['country'] ?? NULL; 
      $state = $_POST['droppedState']; 
      $dropped_state_arr = $_POST['dropped_state_arr'];
      $dragged_state_arr =$_POST['dragged_state_arr'];
      $dragged_state = $_POST['draggedState'];
-     $dropped_state = $_POST['droppedState'];
+     $dropped_state = $_POST['droppedState'] ?? 0 ;
    
      
     //  print_r($_POST);
@@ -1935,6 +1938,12 @@ class LeadsController extends AuthController
     //       echo json_encode(['data'=>[] ,'reponse'=>false]);
     //       exit;
     // }
+
+      
+     if(!$country){
+         $sql = "SELECT country_name FROM  tbl_country where id='$dropped_state'" ; 
+         $country = Yii::app()->db->createCommand($sql)->queryScalar(); 
+     }
 
     $already_exsits = TblLeads::AlreadyExists($id ,$dropped_state) ;              
     if(!empty($already_exsits)){
@@ -2340,7 +2349,9 @@ class LeadsController extends AuthController
         }
         
         $selected_value = TblLeads::GetMultipleSalesRepArr($lead_id); 
-        $this->renderPartial('allAssignedSalesRep' ,  ['salesPerson' =>$alluser , 'multiple_sales'=>$selected_value ,'assigned_to'=>$sales_person ,'lead_id' =>$lead_id] , false , true);
+        $OtherDetails = TblLeads::GetOtherSalesRep($lead_id) ;
+
+        $this->renderPartial('allAssignedSalesRep' ,  ['salesPerson' =>$alluser , 'multiple_sales'=>$selected_value ,'assigned_to'=>$sales_person ,'lead_id' =>$lead_id ,'OtherDetails' => $OtherDetails] , false , true);
          
 
    }
@@ -2349,7 +2360,7 @@ class LeadsController extends AuthController
    // sales leads 
     
    public function actionsalesLeads(){
-    $country = "SELECT DISTINCT country_name  FROM `tbl_country`";
+    $country = "SELECT DISTINCT country_name  FROM `tbl_country`  WHere country_name Not like '%USA-open%'";
     $countryName = Yii::app()->db->createCommand($country)->queryAll();
     $sales_person = User::GetAlluser();   
     $product = Yii::app()->db->createCommand("SELECT * FROM tbl_product ORDER BY sort ASC;")->queryAll();
@@ -2663,5 +2674,123 @@ class LeadsController extends AuthController
     endif ; 
 }
   
+
+public function actionExportExcel()
+{
+           
+        $status = isset($_POST['status']) ? $_POST['status'] : 0;
+        $month =  empty($_POST['month']) ? 0 : $_POST['month'];
+        $salesPerson = $_POST['sales_person'];
+        $today_date = date('Y-m-d'); 
+
+        if(!empty($salesPerson)){
+            $user  =  $_POST['sales_person'];
+        }else{
+             $user = Yii::app()->user->getId(); 
+        }
+
+        $admin  = Yii::app()->user->getId(); 
+        $search = $_POST['search'];
+        
+        $currentYear = $_POST['year'];
+        $startDate = new DateTime("$currentYear-01-01"); // First day of the month
+        $endDate = new DateTime("$currentYear-12-01"); // Start with the first day of the month
+
+         $NewUser = strtolower(Yii::app()->user->id); 
+       
+                                 
+        if($month){
+              $all_date = getMonthdDate($month ,$currentYear); 
+              $start_date = $all_date['start_date'];
+              $end_date = $all_date['end_date'];
+        }else{
+            $start_date = $startDate->format('Y-m-d'); 
+            $end_date = $endDate->format('Y-m-d'); 
+        }
+
+        $state_name =  $_POST['state_name'] ? $_POST['state_name'] : 0;
+
+       
+
+        $sql ="SELECT  tbl.lead_id,tm.sale_rep AS sale_rep ,  COALESCE(product.prod_name, tbl.pro_name) AS prod_name  , 
+                   tbl.*  FROM `tbl_leads` AS tbl LEFT  JOIN tbl_leads_multiple AS tm ON tm.lead_id = tbl.lead_id LEFT JOIN tbl_product product ON product.prod_id = tbl.pro_name WHERE " ; 
+      
+            $sql .=  " tbl.status!=5  " ;  
+
+           if(Yii::app()->user->getState('userGroup') == 2   && $NewUser != "dcote"){    
+              $sql .= "AND (tbl.assigned_to ='$admin' OR tm.sale_rep='$admin') " ;
+           }
+
+            if($search){
+                $sql .= "AND(tbl.TAC_name LIKE '%".$search."%' 
+                OR  tbl.qty LIKE '% ".$search." %'
+                OR tbl.due_date LIKE '%".$search."%'
+                OR tbl.name LIKE  '%".$search."%'
+                OR tbl.last_name LIKE '%" . $search . "%'
+                OR tbl.email LIKE '%" . $search . "%'
+                OR tbl.phone_no LIKE '%" . $search . "%'
+                OR tbl.state_name LIKE '%" . $search . "%'
+                OR tbl.assigned_to LIKE '%" . $search . "%'
+                OR tbl.country_name LIKE '%" . $search . "%' 
+                OR prod_name LIKE '%" . $search . "%' 
+                OR tbl.pro_name LIKE '%" . $search . "%')
+                 ";
+            }
+
+
+        $condition = []; 
+        if($status =='All'):
+               if($salesPerson):
+                   $condition[]  = "DATE(tbl.created_at)  BETWEEN '$start_date' AND '$end_date' OR (tbl.assigned_to = '$salesPerson' OR tm.sale_rep = '$salesPerson') ";
+               else:
+                  $condition[]  = "DATE(tbl.created_at)  BETWEEN '$start_date' AND '$end_date' ";
+               endif ; 
+        elseif($status=='1' && !$month):
+              $condition[] = "tbl.status_update_date = '$today_date' AND tbl.status=1"  ;
+        elseif($month && $salesPerson && $status!='All'):
+               $condition[] = "tbl.status=$status AND DATE(tbl.created_at)  BETWEEN '$start_date' AND '$end_date'  AND (tbl.assigned_to = '$salesPerson' OR tm.sale_rep = '$salesPerson')";
+        elseif($salesPerson && $status!='All'):
+               $condition[] = "tbl.status=$status AND  (tbl.assigned_to = '$salesPerson' OR tm.sale_rep = '$salesPerson')";
+        elseif($month && $status !='All'):
+               $condition[] = "tbl.status=$status AND DATE(tbl.created_at)  BETWEEN '$start_date' AND '$end_date' ";
+        else:
+               $condition[] = " tbl.status=$status  ";
+        endif ;
+     
+   
+            if($state_name){
+                $str_name = TblLeads::getStateNameChar($state_name); 
+                if($str_name){
+                    $condition[] = "tbl.state_name LIKE '%$state_name%' OR tbl.state_code LIKE '%$str_name%'";
+                }else{
+                    $condition[] = "tbl.state_name LIKE '%$state_name%'";
+                }
+            }
+
+
+          $sql .= (count($condition) > 0 ? " AND ". implode(" AND ", $condition) : " ");
+        
+
+          $sql .= "  GROUP BY tbl.lead_id  "; 
+
+            
+        $sql .= " ORDER BY created_at DESC ";
+
+
+
+       
+        $adminLeads = Yii::app()->db->createCommand($sql)->queryAll();  
+  
+      
+       
+     
+
+        $this->renderPartial('report_xls', ['adminLeads' => $adminLeads , 'LEAD_STATUS'=>LEAD_STATUS]);
+  
+
+   
+
+}
+
 
 }

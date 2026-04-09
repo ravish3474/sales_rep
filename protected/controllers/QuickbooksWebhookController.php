@@ -117,20 +117,21 @@ class QuickbooksWebhookController extends Controller
             Yii::app()->end();
         }
 
-        $realmId = Yii::app()->params['QB_REALM_ID'];
+        $realmId = $this->_getRealmIdForInvoice($invoiceNumber);
         $token   = $this->_getValidToken($realmId);
         if ($token === null) {
-            Yii::log('QB getInvoiceStatus: no valid token for realmId=' . $realmId, CLogger::LEVEL_ERROR, 'quickbooks');
+            Yii::log('QB getInvoiceStatus: no valid token for realmId=' . $realmId . ' (invoice=' . $invoiceNumber . ')', CLogger::LEVEL_ERROR, 'quickbooks');
             echo CJSON::encode(array('status' => false, 'error' => 'QB not connected'));
             Yii::app()->end();
         }
-
+        
         // Use the QB Query API to look up the invoice by DocNumber
         $baseUrl  = $this->_apiBase();
         $query    = "SELECT Balance, TotalAmt FROM Invoice WHERE DocNumber = '" . addslashes($invoiceNumber) . "'";
         $url      = $baseUrl . '/v3/company/' . $realmId . '/query?query=' . urlencode($query) . '&minorversion=65';
-        $response = $this->_curlGet($url, $token->access_token);
 
+        $response = $this->_curlGet($url, $token->access_token);
+        
         if ($response === false) {
             Yii::log('QB getInvoiceStatus: API call failed for DocNumber=' . $invoiceNumber, CLogger::LEVEL_ERROR, 'quickbooks');
             echo CJSON::encode(array('status' => false, 'error' => 'QB API error'));
@@ -488,6 +489,64 @@ class QuickbooksWebhookController extends Controller
             ? 'https://quickbooks.api.intuit.com'
             : 'https://sandbox-quickbooks.api.intuit.com';
     }
+
+    /**
+     * Resolve the QuickBooks realm ID to use based on the invoice DocNumber prefix.
+     *
+     * Routing rules:
+     *   - Invoices starting with "JOGATH" → Account A  (QB_REALM_ID)
+     *   - Invoices starting with "JOG"    → Account B  (QB_REALM_ID_B)
+     *   - Anything else                   → Account A  (QB_REALM_ID, safe default)
+     *
+     * IMPORTANT: "JOGATH" must be tested BEFORE "JOG" because JOGATH also starts
+     * with "JOG"; we always match the most specific prefix first.
+     *
+     * @param  string $invoiceNumber
+     * @return string realm ID
+     */
+private function _getRealmIdForInvoice($invoiceNumber)
+{
+    $params = Yii::app()->params;
+
+    // Normalize invoice
+    $invoiceNumber = strtoupper(trim($invoiceNumber));
+
+    // JOGATH → Account A
+    if (strpos($invoiceNumber, 'JOGATH') === 0) {
+        return $params['QB_REALM_ID'];
+    }
+
+       // JOG + 4 digits → Account C
+    if (preg_match('/^JOG\d{4}-/', $invoiceNumber)) {
+
+        if (!empty($params['QB_REALM_ID_C'])) {
+            return $params['QB_REALM_ID_C'];
+        }
+
+        Yii::log(
+            'QB: QB_REALM_ID_C not configured for invoice ' . $invoiceNumber . '. Falling back to Account C.',
+            CLogger::LEVEL_WARNING,
+            'quickbooks'
+        );
+    }
+
+    // JOGYY-XXX → Account B
+    if (preg_match('/^JOG\d{2}-/', $invoiceNumber)) {
+
+        if (!empty($params['QB_REALM_ID_B'])) {
+            return $params['QB_REALM_ID_B'];
+        }
+
+        Yii::log(
+            'QB: QB_REALM_ID_B not configured for invoice ' . $invoiceNumber . '. Falling back to Account B.',
+            CLogger::LEVEL_WARNING,
+            'quickbooks'
+        );
+    }
+
+    // Default → Account A
+    return $params['QB_REALM_ID'];
+}
 
     /**
      * Use the stored refresh token to obtain a new access token from QB.

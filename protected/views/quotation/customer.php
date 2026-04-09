@@ -363,10 +363,22 @@
 									<label class="form-label">Customer Type:</label>
 									<select name="customer_type" id="customer_type" class="form-control">
 										<option value="">Select Customer Type</option>
-										<option value="Sales Direct">Sales Direct</option>
-										<option value="Dealer">Dealer</option>
-										<option value="Factory Direct">Factory Direct</option>
-										<option value=">Private Label">Private Label</option>
+										<option value="College Retail - Bookstore">College Retail - Bookstore</option>
+                                        <option value="Dealer">Dealer</option>
+                                        <option value="Factory Direct Customers">Factory Direct Customers</option>
+                                        <option value="International Sales">International Sales</option>
+                                        <option value="Online Spirit Stores">Online Spirit Stores</option>
+                                        <option value="Online Stores Collegiate">Online Stores Collegiate</option>
+                                        <option value="Private Label Companies">Private Label Companies</option>
+                                        <option value="Sales Direct - Adult Hockey Teams/Leagues">Sales Direct - Adult Hockey Teams/Leagues</option>
+                                        <option value="Sales Direct - Other Sports">Sales Direct - Other Sports</option>
+                                        <option value="Sales Direct College & Juniors">Sales Direct College & Juniors</option>
+                                        <option value="Sales Direct Hockey Related - Youth, High School">Sales Direct Hockey Related - Youth, High School</option>
+                                        <option value="Sales Direct to Business Camps, Misc.">Sales Direct to Business Camps, Misc.</option>
+										<!--<option value="Sales Direct">Sales Direct</option>-->
+										<!--<option value="Dealer">Dealer</option>-->
+										<!--<option value="Factory Direct">Factory Direct</option>-->
+										<!--<option value=">Private Label">Private Label</option>-->
 									</select>
 								</div>
 								<div class="mb-3" id="Exemption_addnew">
@@ -455,10 +467,18 @@
 								<label class="form-label">Customer Type:</label>
 								<select name="customer_type" id="edit_customer_type" class="form-control">
 									<option value="">Select Customer Type</option>
-									<option value="Sales Direct">Sales Direct</option>
-									<option value="Dealer">Dealer</option>
-									<option value="Factory Direct">Factory Direct</option>
-									<option value=">Private Label">Private Label</option>
+									<option value="College Retail - Bookstore">College Retail - Bookstore</option>
+                                    <option value="Dealer">Dealer</option>
+                                    <option value="Factory Direct Customers">Factory Direct Customers</option>
+                                    <option value="International Sales">International Sales</option>
+                                    <option value="Online Spirit Stores">Online Spirit Stores</option>
+                                    <option value="Online Stores Collegiate">Online Stores Collegiate</option>
+                                    <option value="Private Label Companies">Private Label Companies</option>
+                                    <option value="Sales Direct - Adult Hockey Teams/Leagues">Sales Direct - Adult Hockey Teams/Leagues</option>
+                                    <option value="Sales Direct - Other Sports">Sales Direct - Other Sports</option>
+                                    <option value="Sales Direct College & Juniors">Sales Direct College & Juniors</option>
+                                    <option value="Sales Direct Hockey Related - Youth, High School">Sales Direct Hockey Related - Youth, High School</option>
+                                    <option value="Sales Direct to Business Camps, Misc.">Sales Direct to Business Camps, Misc.</option>
 								</select>
 							</div>
 							<div class="col-md-6">

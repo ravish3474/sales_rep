@@ -27,13 +27,27 @@
                                                    }
                                                      if(count($data)):
                                                      foreach($data as $key=>$value){
+                                                       $is_other = $value['other_email'] ?? NULL; 
                                                       $sales_rep = TblLeads::getSalesPersonDetails($value['sale_rep']);
-                                                       if(!empty($sales_rep)):
+                                                       if(!empty($sales_rep)  || $is_other):
                                                     ?>
                                                         <div class="adminItems">
-                                                        <h6 class="adminName"><? echo $sales_rep['fullname'] ?> 
-                                                          <? echo $loggedIn == $value['sale_rep'] ? '(Me)' :'' ?>
-                                                        </h6>
+                                                           <?php 
+                                                               if($is_other){
+                                                                ?>
+                                                                        <h6 class="adminName"><? echo $value['sale_rep'] ?></h6>
+                                                                        
+                                                                 <?php 
+                                                               }else{
+                                                                  ?>
+                                                                        <h6 class="adminName"><? echo $sales_rep['fullname'] ?> 
+                                                                        <? echo $loggedIn == $value['sale_rep'] ? '(Me)' :'' ?>
+                                                                        </h6>
+                                                                  <?php 
+                                                               }
+                                                          ?>
+
+                                                       
                                                             <button class="actionBtns deleteSalesRep" data-multiple-id="<? echo $value['id'] ?>" 
                                                             data-salesPerson = "<? echo $value['sale_rep']  ?>"
                                                             data-lead_id ="<? echo $value['lead_id'] ?>">

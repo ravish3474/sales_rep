@@ -3715,7 +3715,6 @@ if ($dupid) {
 
  <script>
     // when page loads, call the same function
-			<?php $qdoc_id = isset($qdoc_id) ? $qdoc_id : ''; $mode = isset($mode) ? $mode : ''; ?>
 			if("<?=$qdoc_id?>"){
 		      	window.onload = function() {
 			$('#quoteDocModal').modal('show'); 

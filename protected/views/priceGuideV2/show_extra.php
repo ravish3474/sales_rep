@@ -63,7 +63,6 @@
 						<option value="" selected="" disabled="">--Select Category--</option>
 						<?php
 						$count = 0;
-						$current_group = null;
 						foreach ($a_extra as $tmp_key => $row_extra) {
 							$group_name = $row_extra["group_name"];
 							if ($group_name !== $current_group) {

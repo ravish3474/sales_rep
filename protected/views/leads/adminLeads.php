@@ -263,7 +263,7 @@ $rejected_count = $all_count_value[5];
                                 foreach ($countryName as $country) {
 
                                 ?>
-                                    <option value="<?php echo  $country['country_name'] ?>"><?php echo $country['country_name'] ?></option>
+                                    <option value="<?php echo  $country['country_name'] ?>" style="text-transform:capitalize;"><?php echo $country['country_name'] ?></option>
                                 <?
 
                                 }

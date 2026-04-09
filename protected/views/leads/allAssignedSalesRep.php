@@ -24,5 +24,38 @@
 
                                                                      <?                                  
                                                                     }
+
+                                                                         $is_other_checked = false ;
+                                                                          $name = ""; 
+                                                                          $email =""; 
+                                                                          $is_sent_mail = false ; 
+                                                                          $other_id =0; 
+                                                                          if(!empty($OtherDetails)){
+                                                                              $is_other_checked = true ; 
+                                                                              $name = $OtherDetails['sale_rep']; 
+                                                                              $email = $OtherDetails['other_email'] ; 
+                                                                              $is_sent_mail = $OtherDetails['is_sent_mail'] ; 
+                                                                              $other_id = $OtherDetails['id']; 
+                                                                          }
                                                                 ?>
+                                                                
+
+                                                                   <div class="other_bottom_section">
+                                                                     
+                                                                        <label for="others" class="checkbox-label" >Others
+
+                                                                          <input type="checkbox" name="" id="other_checkbox" value="" class="checkbox-button"  <?= $is_other_checked ? "checked" :"" ?> >
+
+                                                                        </label>
+
+                                                                          <div class="row d-flex w-90 gap2 <?=$is_other_checked ? "" : "d-none"?>" id="other_sales_person_div" style="padding:5px;" > 
+                                                                                <input type="text" name="" id="other_sales_person_name" placeholder="Enter Name" style="width: 124px;" value="<?= $name ?>">
+                                                                                <div style="background-color: #fff; padding-right:5px;">
+                                                                                  <input type="email" name="" id="other_sales_person_email" placeholder="Enter Email" style="width: 200px; border: none !important; background: none !important;" value="<?= $email ?>" >
+                                                                                  <input type="checkbox" name="" id="is_send_email" <?= $is_sent_mail ?  'checked' :"" ?> title="Send Mail" >
+                                                                                  
+                                                                                </div>
+                                                                                <input type="hidden" name="" id="other_sales_id" value="<?= $other_id ?>">
+                                                                          </div>
+                                                                     </div>
                                                                 

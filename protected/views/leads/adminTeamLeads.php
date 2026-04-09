@@ -103,9 +103,17 @@ $state_name  = isset($_GET['state_name']) ? $_GET['state_name'] : 0;
                                 </li>
                             </ul>
 
-                            <button class="d-btn greenBtn" type="button" data-toggle="modal" data-target="#newLeadModal">
-                                <figure><img src="../images/icons/pulsWhite.png" alt=""></figure> New Lead
-                            </button>
+                            <div class="d-flex">
+                                    <button class="d-btn greenBtn" type="button" data-toggle="modal" data-target="#newLeadModal">
+                                        <figure><img src="../images/icons/pulsWhite.png" alt=""></figure> New Lead
+                                    </button>
+
+                                
+                                    <button class="greenBtn export_excel d-btn"  type="button">  
+                                         <figure><img src="../images/icons/uiw_file-excel.png" alt=""></figure>
+                                         Excel
+                                    </button>
+                            </div>
                         </div>
 
 
@@ -265,7 +273,7 @@ $state_name  = isset($_GET['state_name']) ? $_GET['state_name'] : 0;
                                 foreach ($countryName as $country) {
 
                                 ?>
-                                    <option value="<?php echo  $country['country_name'] ?>"><?php echo $country['country_name'] ?></option>
+                                    <option value="<?php echo  $country['country_name'] ?>" style="text-transform:capitalize;"><?php echo $country['country_name'] ?></option>
                                 <?
 
                                 }
@@ -469,6 +477,7 @@ $state_name  = isset($_GET['state_name']) ? $_GET['state_name'] : 0;
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
     $(document).ready(function() {
@@ -544,6 +553,8 @@ $('#date_range_filter').on('cancel.daterangepicker', function(ev, picker) {
 
 
                 var table = $('#' + activeTabId + ' table');
+                 // 🔥 store globally for export
+                  window.lastTableHtml = resp.html;
 
 
                 // table.DataTable({
@@ -585,4 +596,165 @@ $('#date_range_filter').on('cancel.daterangepicker', function(ev, picker) {
         callDatatable(global_status, month, sales_person, date_picker, 1, val);
 
     });
+
+
+      $(document).on('click', '.hideSaleRepModal , .savebtn', function() {
+        let month = $('#month_filter').val();
+        let sales_rep = $('.sales_person_selection').val();
+        let year = $('#date_picker').val();
+        let page = $('.tab-pane.active  .paginationBtns.active').attr('href');
+
+         let checkbox =  $('#other_checkbox');
+      
+      let isSaveBtn = $(this).hasClass('savebtn');
+       if(checkbox.is(':checked')  && isSaveBtn) {
+           let name = $('#other_sales_person_div').find('#other_sales_person_name').val(); 
+           let email = $('#other_sales_person_div').find('#other_sales_person_email').val(); 
+           let is_send_mail = $('#other_sales_person_div') .find('#is_send_email')
+            .is(':checked') ? 1 : 0;
+           let lead_id = $('#lead_id_assign').val();
+           let other_id = $('#other_sales_person_div').find('#other_sales_id').val(); 
+
+           if(name == '' || email ==''){
+               alert("Please  enter name and email"); 
+              event.preventDefault();
+            //   event.stopPropagation(); 
+               return false ; 
+           }
+
+              $.ajax({
+                url: 'SavemultipleSalesRep',
+                method: 'POST',
+                data: {
+                    lead_id: lead_id,
+                    name : name , 
+                    email : email , 
+                    is_send_mail : is_send_mail, 
+                    other_id : other_id , 
+                    type : 'Other' , 
+                },
+                success: function(response) {
+                    getAllAssignedSaleRep(lead_id);
+                    getsalesRepList(lead_id);
+                    hideLoader();
+                },
+                error: function(xhr, status, error) {
+                    console.warn("Something went wrong");
+                    hideLoader();
+                }
+            });
+
+
+       }  
+
+
+
+        callDatatable(global_status, month, sales_rep, year, page);
+    });
+
+
+    // $(document).on('click', '.export_excel', function () {
+
+    //     let activeTabId = $('.tab-pane.active').attr('id');
+    //     let table = $('#' + activeTabId + ' table')[0];
+
+    //     if (!table) {
+    //         alert('No table found');
+    //         return;
+    //     }
+
+    //     let clonedTable = $(table).clone();
+
+    //     // ✅ Replace dropdowns
+    //     clonedTable.find('select').each(function () {
+    //         let text = $(this).find('option:selected').text();
+    //         $(this).replaceWith(text);
+    //     });
+
+    //     // 🔥 Fix Assigned To column (IMPORTANT FIX)
+    //     clonedTable.find('td').each(function () {
+    //         let btn = $(this).find('button');
+
+    //         if (btn.length) {
+    //             let text = btn.clone()
+    //                 .children()
+    //                 .remove()
+    //                 .end()
+    //                 .text()
+    //                 .trim();
+
+    //             $(this).html(text);
+    //         }
+    //     });
+
+    //     // ✅ Remove unwanted elements AFTER extracting text
+    //     clonedTable.find('input, button, a, img, figure').remove();
+
+    //     //Remove first 2 columns
+    //     clonedTable.find('tr').each(function () {
+    //         $(this).find('th, td').slice(0, 2).remove();
+    //     });
+
+    //     // Remove last column
+    //     clonedTable.find('tr').each(function () {
+    //         $(this).find('th, td').last().remove();
+    //     });
+
+    //     // ✅ Improve header readability
+    //     clonedTable.find('th').each(function () {
+    //         $(this).text($(this).text().toUpperCase());
+    //     });
+
+    //     let wb = XLSX.utils.table_to_book(clonedTable[0], { sheet: "Report" });
+    //     let ws = wb.Sheets["Report"];
+
+    //     // 🔥 Ensure cols array exists
+    //     if (!ws['!cols']) ws['!cols'] = [];
+
+    //     // 🔥 Set width for column G (index 6)
+    //     ws['!cols'][6] = { wch: 10 }; // adjust width as needed
+    //     ws['!cols'][4] = { wch: 30 };
+    //     ws['!cols'][3] = { wch: 15 };
+    //     ws['!cols'][2] = { wch: 10 };
+
+
+    //     XLSX.writeFile(wb, "LeadReport.xlsx");
+    // });
+
+
+
+$(document).on('click', '.export_excel', function () {
+
+    // let status = $('#status').val() || 'All';
+    let status = global_status ; 
+    let month = $('#month_filter').val() || 0;
+    let sales_person = $('#sales_person').val() || 0;
+    let year = $('#date_picker').val() || <?php echo date('Y'); ?>;
+    let search = $('#search').val() || '';
+
+    let date_range = $('#date_range_filter').val() || '';
+    let state_name = $('.tab-pane.active').data('state') || '';
+
+        // 🔥 First create form
+    let form = $('<form>', {
+        action: 'ExportExcel',
+        method: 'POST'
+    });
+
+
+
+    form.append($('<input>', { type: 'hidden', name: 'date_range', value: date_range }));
+    form.append($('<input>', { type: 'hidden', name: 'state_name', value: state_name }));
+
+    form.append($('<input>', { name: 'status', value: status }));
+    form.append($('<input>', { name: 'month', value: month }));
+    form.append($('<input>', { name: 'sales_person', value: sales_person }));
+    form.append($('<input>', { name: 'year', value: year }));
+    form.append($('<input>', { name: 'search', value: search }));
+    
+
+    $('body').append(form);
+    form.submit();
+    form.remove();
+});
 </script>

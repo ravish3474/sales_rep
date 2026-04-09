@@ -80,6 +80,43 @@
         background-color: #EEE;
     }
 
+    /* Price guide comparison alert */
+    .pg-price-alert {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 4px;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .pg-price-up {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+    }
+    .pg-price-down {
+        background: #d4edda;
+        border: 1px solid #28a745;
+        color: #155724;
+    }
+    .btn-pg-apply {
+        background: #337ab7;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 2px 8px;
+        font-size: 10px;
+        cursor: pointer;
+        line-height: 1.4;
+        flex-shrink: 0;
+    }
+    .btn-pg-apply:hover {
+        background: #286090;
+    }
+
     .tbl-addi-info th {
         background-color: #AAF;
         outline: 1px solid #DDD;
@@ -263,7 +300,7 @@
     /*  */
     #quoteV2Modal {
         overflow-y: scroll;
-        scrollbar-width: none;
+        /*scrollbar-width: none;*/
     }
 
     #quoteV2Modal select {
@@ -3484,6 +3521,7 @@ $currency_map = [
 
                 <div id="requestApprovalV2Btn">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <a href="<?php echo Yii::app()->request->baseUrl; ?>/quotation/productPerformance" target="_blank" class="btn btn-info">Product Performance</a>
                     <button type="button" class="btn btn-success" id="btn_request_approve" onclick="return requestApprovalV2();">Request Approval</button>
                 </div>
                 <div id="addnewcustubmitBtn" style="display: none;">
@@ -6468,6 +6506,12 @@ $users = Yii::app()->db->createCommand("SELECT id, username, fullname, email FRO
     }
 
 
+
+    function applyPgPrice(btn, inputId, newPrice, itemKey) {
+        $('#' + inputId).val(parseFloat(newPrice).toFixed(2));
+        calPrice(itemKey);
+        $(btn).closest('.pg-price-alert').fadeOut(250);
+    }
 
     function sendToCart(qdoc_id, from_page = "") {
 

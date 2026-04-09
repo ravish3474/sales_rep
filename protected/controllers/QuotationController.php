@@ -706,7 +706,7 @@ class QuotationController extends AuthController
 	// 		$this->render('new_request',$result);//--- Use same view with New status
 	// 	}
 	
-		public function actionSaveEstimate()
+public function actionSaveEstimate()
 {
     $cust_id = $_POST["cust_selector"];
     $qdoc_id = $_POST["qdoc_id"];
@@ -3560,6 +3560,10 @@ LIMIT
 		}
 		
 		$return_html .= '<div class="bill_to">BILL TO<br>' . $row_quote["cust_name"];
+
+		if ($action_from == "vb") {
+			$return_html .= '<input type="hidden" name="cust_selector" value="' . $row_quote["cust_id"] . '">';
+		}
 		
 
 		$return_html .= '<pre>' . $row_quote["cust_info"] . ''.$billing_state.'' . ($row_quote["tax_id"] == "" ? '' : '<b>TAX ID : </b><span id="tax_id_preview">' . $row_quote["tax_id"] . '</span>') . ' </pre>';
@@ -3784,7 +3788,7 @@ LIMIT
 
 				if ($user_group == "1" || $user_group == "99") {
 
-					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) ORDER BY fullname ASC;";
+					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) AND `fullname` NOT IN ('Jim', 'Lucas Trickle', 'Matt Carey', 'Mike Nightingale', 'Shane Hiley', 'Trevor Easthope') ORDER BY fullname ASC;";
 
 					$sales_user = Yii::app()->db->createCommand($sql_user)->queryAll();
 
@@ -3853,7 +3857,7 @@ LIMIT
 			} else if ($action_from == "va") {
 
 				if ($user_group == "1" || $user_group == "99") {
-					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) ORDER BY fullname ASC;";
+					$sql_user = "SELECT * FROM `user` WHERE `user_group_id` = 2 AND `enable` = 1 AND `id` NOT IN (29, 73, 76) AND `fullname` NOT IN ('Jim', 'Lucas Trickle', 'Matt Carey', 'Mike Nightingale', 'Shane Hiley', 'Trevor Easthope') ORDER BY fullname ASC;";
 
 					$sales_user = Yii::app()->db->createCommand($sql_user)->queryAll();
 
